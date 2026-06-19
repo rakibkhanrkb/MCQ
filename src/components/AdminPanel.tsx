@@ -518,15 +518,13 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       return;
     }
 
-    // Constraint: Hardcore admin rkb_bitBox can't modify/create other admins
-    if (activeAdminUsername.toLowerCase() === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' অন্য কোনো অ্যাডমিন মডিফাই বা তৈরি করতে পারবে না!");
-      return;
-    }
+    // Constraint: Hardcore admin rkb_bitBox can modify/create other admins.
+    // If the logged in user is NOT 'rkb_bitBox', they are forbidden from modifying 'rkb_bitBox'.
+    const isEditingSelfOrHardcore = uname === 'rkb_bitbox';
+    const isCurrentOperatorHardcore = activeAdminUsername.toLowerCase() === 'rkb_bitbox';
 
-    // Protection rule: Nobody can edit/create/delete rkb_bitBox dynamically
-    if (uname === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' এর তথ্য মডিফাই বা পরিবর্তন করা সম্ভব নয়!");
+    if (isEditingSelfOrHardcore && !isCurrentOperatorHardcore) {
+      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' এর তথ্য মডিফাই বা পরিবর্তন করা অন্য কোনো অ্যাডমিনের পক্ষে সম্ভব নয়!");
       return;
     }
 
@@ -535,8 +533,8 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       if (editingAdminId) {
         // Enforce protection if the admin being edited is rkb_bitBox
         const matched = adminsList.find(a => a.id === editingAdminId);
-        if (matched && matched.username.toLowerCase() === 'rkb_bitbox') {
-          alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox'কে পরিবর্তন করা অসম্ভব!");
+        if (matched && matched.username.toLowerCase() === 'rkb_bitbox' && !isCurrentOperatorHardcore) {
+          alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' কে পরিবর্তন করার ক্ষমতা সাধারণ অ্যাডমিনদের নেই!");
           setLoading(false);
           return;
         }
@@ -585,12 +583,9 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   };
 
   const handleEditAdmin = (ad: AdminAccount) => {
-    if (activeAdminUsername.toLowerCase() === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' অন্য কোনো অ্যাডমিন মডিফাই করতে পারবে না!");
-      return;
-    }
-    if (ad.username.toLowerCase() === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' এর তথ্য মডিফাই করা সম্ভব নয়!");
+    const isCurrentOperatorHardcore = activeAdminUsername.toLowerCase() === 'rkb_bitbox';
+    if (ad.username.toLowerCase() === 'rkb_bitbox' && !isCurrentOperatorHardcore) {
+      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' এর তথ্য মডিফাই করা কোনো সাধারণ অ্যাডমিনের পক্ষে সম্ভব নয়!");
       return;
     }
     setEditingAdminId(ad.id || null);
@@ -603,20 +598,22 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   };
 
   const handleDeleteAdmin = async (id: string) => {
-    if (activeAdminUsername.toLowerCase() === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox' অন্য কোনো অ্যাডমিন ডিলেট করতে পারবে না!");
-      return;
-    }
-
+    const isCurrentOperatorHardcore = activeAdminUsername.toLowerCase() === 'rkb_bitbox';
     const matched = adminsList.find(a => a.id === id);
     if (!matched) return;
 
     if (matched.username.toLowerCase() === 'rkb_bitbox') {
-      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox'কে ডিলেট করা অসম্ভব!");
+      alert("হার্ডকোর অ্যাডমিন 'rkb_bitBox'কে ডিলেট করা কোনো অ্যাডমিনের পক্ষেই সম্ভব নয়!");
       return;
     }
 
-    if (!confirm(`নিশ্চিতভাবেই কি অ্যাডমিন "${matched.name}" কে ডিলেট করতে চান?`)) return;
+    if (matched.username.toLowerCase() !== 'rkb_bitbox' && !isCurrentOperatorHardcore && !confirm("অ্যাডমিন তালিকার তথ্য ডিলেট করার জন্য আপনি কি নিশ্চিত?")) {
+      return;
+    }
+
+    if (isCurrentOperatorHardcore && !confirm(`নিশ্চিতভাবেই কি অ্যাডমিন "${matched.name}" কে ডিলেট করতে চান?`)) {
+      return;
+    }
 
     setLoading(true);
     try {
