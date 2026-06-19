@@ -171,7 +171,7 @@ export default function HomePage({ exams, onNavigate, onSelectExam, isAuthentica
               </h1>
               
               <p className="text-sm md:text-base text-purple-200/60 font-normal max-w-xl leading-relaxed">
-                A minimalist, high-fidelity online testing suite. Access dynamic MCQ assessments, evaluate your score history with real-time analytics, and download certified results.
+                Boost your exam preparation with dynamic MCQ tests curated from the 'ICT MCQ Decoder' book. Evaluate your skills for BCS, NTRCA, and Bank IT exams with instant results.
               </p>
             </motion.div>
 
