@@ -1,0 +1,222 @@
+[
+  {
+    "text": "1. A security team is tasked with configuring a newly deployed SIEM system. With limited resources, they must prioritize specific monitoring scenarios that provide the greatest security benefit. The team understands that an effective SIEM relies on well-defined use cases tallored to the organization's environment. Given the evolving threat landscape, they must carefully choose which use cases to implement first to maximize value and threat detection capabilities. Which factor should guide their selection of use cases?",
+    "options": {
+      "A": "Implement as many use cases as the SIEM supports to cover all threats",
+      "B": "Prioritize use cases that address zero-day attacks.",
+      "C": "Focus on use cases required to meet industry compliance standards",
+      "D": "Select use cases based on the availability and quality of data from existing data sources."
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "2. Tech innovates, a software development company, has received an alert from a reputable security research group provider about a newly discovered zero-day vulnerability in a widely used web application framework. The vulnerability is being actively exploited in the wild, and there is an increased risk of targeted attacks. against organizations using the affected framework. Since no official patch is available, the SOC team needs to stay ahead of emerging threats by monitoring adversary tactics, identifying indicators of compromise (loCs), and proactively adjusting security controls. The CISO wants to implement immediate defensive measures to detect, track, and mitigate the impact of the zero-day threat. Which SOC technology would be crucial in providing real-time visibility into evolving threat intelligence and enabling proactive mitigation?",
+    "options": {
+      "A": "Vulnerability Management Tools",
+      "B": "Endpoint Detection and Response (EDR) Tools",
+      "C": "Threat Intelligence Management Tools",
+      "D": "Security Information and Event Management (SIEM) Solutions"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "3. A SOC analyst monitoring authentication logs detects a sudden and significant spike in failed login attempts targeting multiple critical servers during non-business hours. These repeated authentication failures appear abnormal compared to typical login activity. Upon deeper inspection, the analyst finds that all attempts are originating from a single external IP address, indicating a targeted attack rather than random scanning. What raises further concern is that some login attempts involve legitimate employee usernames, suggesting the possibility of a credential-stuffing attack using previously compromised credentials or an ongoing brute-force attempt. Given the nature of this suspicious activity and its potential to escalate into unauthorized access, the analyst must determine the appropriate next step in the threat hunting process to assess the situation further.",
+    "options": {
+      "A": "Continuous Improvement",
+      "B": "Investigate and Analyze",
+      "C": "Rapid Response",
+      "D": "Establish a Baseline"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "4. A threat hunter analyzing an infected endpoint finds that malicious processes keep reappearing even after termination, making traditional remediation ineffective. The user of the endpoint reports occasional system slowdowns, abnormal pop-ups, and unauthorized application launches. Upon deeper inspection, the threat hunter discovers that the system has multiple scheduled tasks executing unknown scripts at specific intervals, along with suspicious registry modifications that enable automatic script execution upon startup. Further investigation reveals that the endpoint has made occasional outbound connections to an unclassified external server, though the traffic is encrypted and intermittent. Additionally, the organization recently experienced multiple failed logins attempt on privileged accounts originating from the same subnet, raising concerns about potential credential theft or lateral movement. With the possibility of persistence mechanisms, lateral movement, or external C2 activity, which signs should the threat hunter look out for to confirm and mitigate the threat?",
+    "options": {
+      "A": "Host-Based Artifacts",
+      "B": "Network-Based Artifacts",
+      "C": "Indicators of Attack (loAs)",
+      "D": "Threat Intelligence & Adversary"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "5. The SOC team at a national cybersecurity agency has detected anomalous network traffic originating from a sensitive government server. Initial analysis suggests a potential intrusion, leading the SOC team to escalate the incident to the forensic team for deeper investigation. Upon forensic examination, the team discovers a trojan on the compromised server. The trojan is suspected of engaging in data exfiltration, raising concerns about potential backdoor access and long-term persistence mechanisms employed by the malware. Given the severity of the situation, the lead malware analyst is tasked with conducting an in-depth analysis of the trojan to determine its capabilities (e.g., command execution, privilege escalation, keylogging), its persistence mechanisms (e.g., registry modifications, scheduled tasks, startup entries), and any backdoor functionalities (e.g., remote access, hidden communication channels) However, due to the sensitive nature of the system and the risk of unintended execution, the analyst must analyze the trojan's binary code at the instruction level without actually executing it. Which technique should the forensic analyst use?",
+    "options": {
+      "A": "Network Behavior Monitoring",
+      "B": "Interactive Debugging",
+      "C": "Dynamic Code Injection",
+      "D": "Malware Disassembly"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "6. Sarah Chen is a Level 1 security analyst in the Security Operations Center (SOC) team of Centex Healthcare, a regional hospital network. The SOC team has detected a potential data breach involving unauthorized access to patient records, Multiple departments need constant updates: Legal needs to assess HIPAA compliance implications, HR needs to coordinate staff training responses, and their managed security service provider requires technical details to assist with containment. Which role effectively serve as the central point of communication between all these stakeholders?",
+    "options": {
+      "A": "Information Security Officer",
+      "B": "Public Relations Manager",
+      "C": "Incident Coordinator",
+      "D": "Incident Manager"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "7. A security operations center (SOC) team is investigating a phishing attack that targeted multiple employees. During the Containment Phase, they need to determine how users interacted with the malicious email, whether they opened it, clicked on links, downloaded attachments, or entered credentials. This information is critical to assessing the impact and preventing further compromise. Which specific activity helps the SOC team understand user interactions with the phishing email?",
+    "options": {
+      "A": "Monitoring and containment validation.",
+      "B": "Malware infection check",
+      "C": "Blocking C2 and email traffic.",
+      "D": "User action verification"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "8. A manufacturing company is deploying a SIEM system and wants to improve both its security monitoring and regulatory compliance capabilities. During the planning phase, the team decides to use an output-driven approach, starting with use cases that address unauthorized access to production control systems. They configure data sources and alerts specific to this use case, ensuring they receive actionable alerts without excessive false positives. After validating its success, they move on to use cases related to supply chain disruptions and malware detection. Which of the following best describes the primary advantage of using an output-driven approach in SIEM deployment?",
+    "options": {
+      "A": "The company can create more complex use cases with greater scope",
+      "B": "The SIEM system can automatically block all unauthorized access attempts",
+      "C": "The SOC team can respond to all incidents in real time without delays",
+      "D": "The company can collect logs from non-critical systems."
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "9. Tech Solutions, a software development firm, discovered a potential data leak after an external security researcher reported finding sensitive customer data on a public code repository. Level 1 SOC analysts confirmed the presence of the data and escalated the issue. Level 2 analysts have been tracking the source of the leak, and have found that the data was uploaded from an internal network account. The incident response team has been alerted, and the CISO is demanding a comprehensive analysis of the incident, including the extent of the data breach and the timeline of events. The SOC manager is overwhelmed and has to decide whom to assign to the task of the in-depth investigation. To accurately determine the timeline, extent, and root cause of the data leak, which of the following SOC role is critical in gathering and analyzing the digital evidence?",
+    "options": {
+      "A": "SOC Manager",
+      "B": "Subject Matter Expert",
+      "C": "Threat Intelligence Analyst",
+      "D": "Forensic Analyst"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "10. You are a SOC L1 analyst, and a critical infrastructure provider of your organization suffered an attack where threat actors infiltrated their network and exfiltrated sensitive system blueprints. However, before their presence was detected, they executed a series of commands that altered system logs, wiped forensic artifacts, and modified timestamps to mimic normal activity. The adversary also ensured that no unusual login events were logged by manipulating security monitoring tools. Which APT lifecycle phase does this represent?",
+    "options": {
+      "A": "Cleanup",
+      "B": "Initial Intrusion",
+      "C": "Expansion",
+      "D": "Search and Exfiltration"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "11. The SOC team found a suspicious document file on a user's workstation. Upon initial inspection, the document appears benign, but deeper analysis reveals an embedded PowerShell script. The team suspects the script is designed to download and execute a malicious payload. They need to understand the script's functionality without triggering it. Which malware analysis technique would be recommended technique for the SOC team to understand the PowerShell script's functionality without executing it?",
+    "options": {
+      "A": "Automated behavioral analysis",
+      "B": "Network traffic analysis",
+      "C": "Static analysis",
+      "D": "Dynamic analysis"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "12. Pearl is an L1 SOC analyst working for a global financial institution that relies on SQL Server databases to store and manage sensitive customer information. As part of her daily security monitoring, she notices an alert on her SOC dashboard indicating a brute force attack attempt targeting the organization's web application login page. Upon investigating, she observes multiple failed login attempts originating from the same IP address, followed by a successful login as a server administrator. Recognizing the potential threat, she immediately shifts focus to the database server logs to analyze unauthorized access patterns. During detailed analysis of the logs, she uncovers that the attacker successfully brute-forced a privileged user account on the website and using the compromised credentials, they gained access to the SQL Server database. Which of the following logs will help her identify if the intruder performed any unauthorized modifications in the database?",
+    "options": {
+      "A": "Security Log",
+      "B": "Transaction Log",
+      "C": "Audit Log",
+      "D": "Maintenance Log"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "13. You are working in a team of Cyber Security Operation Center analysts for a Global Startup Pay Online that handles and provides back-end gateways for different payment based applications and digital wallets, your team is responsible for monitoring security logs across various systems, including firewalls, authentication servers, and endpoint detection tools. Your team currently relies on manual log reviews to detect security threats, but the sheer volume of raw, unstructured logs is making this process inefficient, time-consuming, and prone to human error. During a recent security incident, you and your team struggled to quickly extract relevant details form disorganized log data which resulted in delay of threat detection and response. Your team has decided to improve efficiency by implementing an automated log parsing solution that can transform unstructured logs into a structured format. Which log parsing technique will you implement for this scenario to improve the log data structuring and enable efficient querying and analysis?",
+    "options": {
+      "A": "Semantic Parsing",
+      "B": "Grok Filters",
+      "C": "Key-Value Extraction",
+      "D": "Delimited Parsing"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "14. A large financial institution, SOC has recently identified a sophisticated phishing campaign targeting its employees, resulting in unauthorized access to sensitive customer data. The SOC team is under pressure to enhance their detection and response capabilities to manage this evolving threat. The organization already uses a SIEM system for log aggregation and alerting, alongside an EDR solution for endpoint visibility. Additionally, they have access to XDR for broader threat detection and XSOAR for security orchestration and automation. As a SOC analyst, you've been asked to recommend an integration strategy to improve real-time threat correlation, streamline incident response workflows, and maximize the use of existing tools. Which of the following integrations would meet these goals?",
+    "options": {
+      "A": "Integrate XDR with XSOAR",
+      "B": "Integrate EDR with XSOAR",
+      "C": "Integrate XDR with SIEM",
+      "D": "Integrate EDR with SIEM"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "15. The SOC analyst at a national cybersecurity agency detected unusual system behavior on critical infrastructure servers. Initial scans flagged potential malware activity. Due to the sophisticated nature of the suspected attack, which included registry key modifications, process injection, and unauthorized tasks, the case was escalated to the forensic team. The forensic team suspects the malware is designed for stealthy data exfiltration. To fully assess the compromise, they captured system snapshots before and after suspected infection to identify unauthorized changes and anomalies. Which process is the forensic team following by capturing and comparing system snapshots to detect unauthorized changes and anomalies?",
+    "options": {
+      "A": "Host integrity monitoring",
+      "B": "Threat intelligence gathering",
+      "C": "Digital forensics",
+      "D": "Signature-based detection"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "16. A major financial institution has strict policies preventing unauthorized data transfers. As a SOC analyst, you are conducting routine log analysis when you detect an anomaly an employee's workstation is initiating large file transfers outside of business hours. The files in question contain highly sensitive customer financial records. Upon further investigation, you discover that the employee has been remotely accessing the system from an unfamiliar IP address. Security logs also flag an unauthorized USB device connected to the workstation, violating corporate policy. Given the nature of the data involved and the possibility of data exfiltration, you need to act swiftly. What will be your first step in responding to this incident?",
+    "options": {
+      "A": "Inform employee's department and wait for evidence",
+      "B": "Disable corporate VPN entirely",
+      "C": "Isolate employee's workstation and revoke remote access",
+      "D": "Conduct a full forensic analysis first"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "17. During routine monitoring, the SIEM detects an unusual spike in outbound data transfer from a critical database server. The typical outbound traffic for this server is around 5 MB/hour, but in the past 10 minutes, it has sent over 500 MB to an external IP address No predefined signatures match this activity, but the SIEM raises an alert due to deviations from the server's normal behavior profile. Which detection method is responsible for this alert?",
+    "options": {
+      "A": "Anomaly-based detection",
+      "B": "Heuristic-based detection",
+      "C": "Signature-based detection",
+      "D": "Rule-based detection"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "18. During a routine threat intelligence briefing, a SOC analyst comes across a classified report detailing a sophisticated cybercrime syndicate targeting executives of high-profile financial institutions. Unlike traditional malware-based attacks, these adversaries rarely leave digital footprints and seem to anticipate security measures in advance. While analyzing recent incidents, the analyst discovers that several breaches began with seemingly innocent conversations a foreign journalist requesting an interview with a CEO, and a security consultant offering free risk assessments. Further investigations reveal that attackers socially engineered employees, manipulated trust, and extracted critical security details long before launching technical attacks. Realizing that the most valuable intelligence may not come from log files or malware analysis, the analyst decides to focus on intelligence that involves deception detection, and psychological profiling to uncover the true intent and methods of the attackers. Which type of intelligence is the analyst leveraging in this situation?",
+    "options": {
+      "A": "Technical Threat Intelligence",
+      "B": "Threat Intelligence Feeds",
+      "C": "Human Intelligence",
+      "D": "Open-Source Intelligence (OSINT)"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "19. National Health, a government agency responsible for managing sensitive patient health records, is subject to strict data sovereignty regulations that require all data to be stored and processed within the country's borders. The agency's leadership is deeply concerned about the potential risks associated with outsourcing security operations, as they need to ensure complete control over the handling of patient data. They also face increasing cyber threats and require a 24/7 security monitoring capability. The agency has a large budget, and is able to hire many security professionals. They need 24/7 security monitoring, and the emphasis on maintaining complete control over sensitive data, which SOC model would be suitable for their needs?",
+    "options": {
+      "A": "In-House/Internal SOC Model",
+      "B": "Outsourced SOC Model",
+      "C": "Hybrid SOC Model expertise of an MSSP",
+      "D": "A combination of multiple MSSP'S"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "20. A health corporation is implementing an SIEM solution to improve its ability to detect and respond to security incidents and comply with the HIPAA regulatory requirements for protecting sensitive patient data. They need to ensure that the implemented SIEM solution can efficiently collect, analyze, and correlate security events from various sources, including network devices, servers, and security applications, and generate timely alerts for potential HIPAA violations. Which of the following capabilities is needed for a corporation's SIEM solution to meet these needs?",
+    "options": {
+      "A": "Threat hunting and intelligence",
+      "B": "Log management and security analytics",
+      "C": "Log collection through agents",
+      "D": "Centralized SIEM Implementation"
+    },
+    "answer": "B",
+    "marks": 1
+  }
+]

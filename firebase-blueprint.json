@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "An MCQ question with 4 options",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "The question text" },
+        "options": {
+          "type": "object",
+          "properties": {
+            "A": { "type": "string" },
+            "B": { "type": "string" },
+            "C": { "type": "string" },
+            "D": { "type": "string" }
+          },
+          "required": ["A", "B", "C", "D"]
+        },
+        "answer": { "type": "string", "enum": ["A", "B", "C", "D"] },
+        "marks": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "options", "answer", "marks"]
+    },
+    "Exam": {
+      "title": "Exam Definition",
+      "description": "Exam categorised by subject and topic with questions and pricing details",
+      "type": "object",
+      "properties": {
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "timeLimit": { "type": "number" },
+        "price": { "type": "number" },
+        "isPublished": { "type": "boolean" },
+        "questions": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["subject", "topic", "timeLimit", "price", "isPublished", "questions"]
+    },
+    "ExamResult": {
+      "title": "Exam Result",
+      "description": "Result of an exam taken by a student",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "examId": { "type": "string" },
+        "examTitle": { "type": "string" },
+        "score": { "type": "number" },
+        "total": { "type": "number" },
+        "percentage": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "studentName", "examId", "examTitle", "score", "total", "percentage"]
+    },
+    "UserAccount": {
+      "title": "User Account",
+      "description": "Student login credentials and info",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "password": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "institution": { "type": "string" },
+        "purchasedExamIds": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "password", "name", "phone", "email", "institution"]
+    },
+    "PaymentSlip": {
+      "title": "Payment Slip",
+      "description": "Verification data for an exam payment",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "examId": { "type": "string" },
+        "examTitle": { "type": "string" },
+        "amount": { "type": "number" },
+        "trxId": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "studentName", "examId", "examTitle", "amount", "trxId", "status"]
+    },
+    "ExamRoutine": {
+      "title": "Exam Routine",
+      "description": "Exam schedule guidelines, PDF, images, or custom text routines",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "routineType": { "type": "string", "enum": ["text", "image", "pdf"] },
+        "fileUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "routineType"]
+    },
+    "PortalSettings": {
+      "title": "Portal Settings",
+      "description": "Dynamic header logo type, text, and asset links",
+      "type": "object",
+      "properties": {
+        "logoType": { "type": "string" },
+        "logoText": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      }
+    },
+    "AdminAccount": {
+      "title": "Admin Account",
+      "description": "Admin users for accessing Administrative console panel",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["username", "password", "name", "role"]
+    },
+    "ActivityLog": {
+      "title": "Activity Log",
+      "description": "Historical capture of administrative operations and changes",
+      "type": "object",
+      "properties": {
+        "adminUsername": { "type": "string", "description": "The admin operator performing the task" },
+        "action": { "type": "string", "description": "Narrative text of the action" },
+        "category": { "type": "string", "description": "High-level classification like Payment, settings, Exam" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "string", "description": "Details about the change" }
+      },
+      "required": ["adminUsername", "action", "category"]
+    }
+  },
+  "firestore": {
+    "exams": {
+      "schema": "Exam",
+      "description": "Collection of subject and topic-wise MCQ Exams"
+    },
+    "exams/{examId}/mcq_pool": {
+      "schema": "Question",
+      "description": "Subcollection under exams containing MCQ pool questions"
+    },
+    "exam_results": {
+      "schema": "ExamResult",
+      "description": "Historical results of students"
+    },
+    "users": {
+      "schema": "UserAccount",
+      "description": "Student accounts for login and profile management"
+    },
+    "payments": {
+      "schema": "PaymentSlip",
+      "description": "Verification ledger for bKash payments"
+    },
+    "exam_routines": {
+      "schema": "ExamRoutine",
+      "description": "Schedule files, PDFs, images or textual calendars"
+    },
+    "settings": {
+      "schema": "PortalSettings",
+      "description": "Global general configuration files"
+    },
+    "admins": {
+      "schema": "AdminAccount",
+      "description": "Administrative users stored securely in Firestore"
+    },
+    "activity_logs": {
+      "schema": "ActivityLog",
+      "description": "History of actions performed by administrators"
+    }
+  }
+}

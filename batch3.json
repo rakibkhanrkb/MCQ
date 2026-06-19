@@ -1,0 +1,222 @@
+[
+  {
+    "text": "41. Secuzin Corp., is a large enterprise performing millions of financial transactions daily, making it critical to analyze security logs efficiently, detect suspicious activities, and respond to incidents in real-time. Its SOC is responsible for managing security logs from various network devices, including firewalls, intrusion detection systems (IDS), authentication servers, and cloud services. As part of their SOC team to fulfill their compliance and regulatory requirements that mandate long-term archival of the logs you need to provide a log storage solution which should be scalable to handle increasing log volumes, provide encryption for data security, and should be seamlessly accessible. Which storage solution you must choose to meet these long-term log storage requirements",
+    "options": {
+      "A": "Local storage",
+      "B": "Hybrid storage system",
+      "C": "Distributed storage system",
+      "D": "Cloud storage"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "42. A financial institution's SIEM is generating a high number of false positives, causing alert fatigue among SOC analysts. To reduce this burden and improve threat detection accuracy, the organization integrates Al capabilities into the SIEM. After implementation, the SOC team observes a significant decrease in redundant alerts, along with faster detection of genuine threats. Which Al capability contributed to this improvement?",
+    "options": {
+      "A": "Dynamic rule optimization",
+      "B": "Automated rule generation",
+      "C": "Rule validation and testing",
+      "D": "Data integration enhancement"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "43. At a large healthcare organization, the Security Operations Center (SOC) detects a surge of failed login attempts on employee accounts, indicating a possible brute-force attack. To contain the threat, the team quickly takes action to prevent unauthorized access. However, they also need to implement a security measure that strengthens account protection beyond just stopping the current attack, reducing the risk of similar incidents in the future. During the Containment Phase, which action would best enhance long term account security against brute-force attacks?",
+    "options": {
+      "A": "Block IP and enforce account lockout policies.",
+      "B": "Enable multi-factor authentication (MFA)",
+      "C": "Cross-verify false positives",
+      "D": "Notify affected users"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "44. ABC is a highly reputed multinational company with multiple offices across the globe and you are working here as an L2 SOC Analyst. You are implementing a centralized logging solution to enhance security monitoring. You are responsible for ensuring that log messages from routers, firewalls, and servers across multiple remote offices are efficiently collected and forwarded to a central syslog server. To streamline this process, an intermediate component is deployed to receive log messages from different devices and forward them to the main syslog server. Which component in the syslog infrastructure performs this function?",
+    "options": {
+      "A": "Syslog Listener",
+      "B": "Syslog Collector",
+      "C": "Syslog Relay",
+      "D": "Syslog Database"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "45. A large financial organization has recently experienced an increase in sophisticated cyber threats, including zero-day attacks and advanced persistent threats (APTs). The security team is struggling with traditional detection methods, which rely heavily on signature based detection and manual intervention, causing delays in identifying and mitigating threats. To enhance their security posture, the Chief Information Security Officer (CISO) is exploring Al-driven solutions that can automatically analyze vast datasets, detect anomalies, and adapt to evolving threats in real time. The goal is to implement a system that can identify suspicious activity without predefined signatures, allowing for faster response times and minimal human oversight. Which key Al technology should the organization focus on to achieve this?",
+    "options": {
+      "A": "Natural Language Processing (NLP)",
+      "B": "Static IP Blocking",
+      "C": "Machine Learning (ML)",
+      "D": "Heuristic-based Signature Detection"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "46. A large web hosting service provider Web4Everyone is responsible for hosting multiple major websites, social media platforms and more. You are working here as a LI SOC analyst responsible for investigating web server logs for potential malicious activity. Recently, your team detected multiple failed logins attempts and unusual traffic patterns targeting the company's web application. To efficiently analyze the logs and identify key details such as the remote host, username, timestamp, requested resource, and HTTP status code, and user-agent you need a structured log format that ensures quick and accurate parsing. Which standardized log format will you choose for this scenario?",
+    "options": {
+      "A": "Tab-Separated Format",
+      "B": "Common Log Format (CLF)",
+      "C": "Extended Log Format (ELF)",
+      "D": "JSON Format"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "47. Sarah Chen works as a Security Analyst at Midwest Financial, a regional bank headquartered in Chicago. At 2. AM, her SOC team detects unusual data exfiltration patterns and evidence of lateral movement across multiple servers containing sensitive customer data. The activity appears sophisticated and may require forensic analysis and system restoration. Which tearn should take primary responsibility for managing this complex security incident?",
+    "options": {
+      "A": "Security Engineering Team",
+      "B": "SOC (Security Operations Center) Team",
+      "C": "Threat Intelligence Team",
+      "D": "IRT (Incident Response Team)"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "48. The Security Operations Center (SOC) of a mid-sized financial institution is struggling with an overwhelming number of security alerts. The small team is bombarded with thousands of daily notifications, many of which are based on Indicators of Compromise (IOCs) such as suspicious IP addresses, hashes, and domains. However, these alerts lack critical context about whether they truly pose a threat to the organization. Analysts spend excessive time chasing low-priority incidents, while more severe threats may go unnoticed. Additionally, the team lacks the necessary tools and intelligence to correlate IOCs with real-world threats, making prioritization nearly impossible. As a result, alert fatigue is setting in, reducing efficiency and increasing the risk of missing an actual attack. Which of the following poses the greatest challenge in this environment?",
+    "options": {
+      "A": "Malware-centric and CTI are not equivalent",
+      "B": "Budget and Enterprise skill",
+      "C": "Distinguishing loc from CTI",
+      "D": "Information overload"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "49. You are part of a team of SOC analysts in a multinational organization that processes large volumes of security logs from various sources, including firewalls, IDS, and authentication servers. Your team realizes they are facing difficulties to detect security incidents because logs from different systems are analyzed in isolation, making it harder to link related events. What approach should you implement for future forensic investigations to automatically match related log events based on predefined rules?",
+    "options": {
+      "A": "Log correlation",
+      "B": "Log normalization",
+      "C": "Log transformation",
+      "D": "Log collection"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "50. You are a Threat Hunter in the SOC team of a prestigious law firm specializing in high profile corporate cases. Your firm has recently suffered a data breach, where confidential client documents were leaked on a dark web forum. As part of your proactive threat hunting initiative, you analyze security logs, network traffic, and endpoint activity to trace the attacker's steps using the Cyber Kill Chain framework. Your investigation reveals that the attacker initially bypassed the firm's multi-factor authentication (MFA) by masquerading as a legitimate user. Once inside, they moved laterally within the internal network, accessed sensitive client records from a shared file repository, and exfiltrated the data over an extended period. You are tasked to identify the attack phase within the Cyber Kill Chain framework to strengthen defenses against similar attacks. Implement proactive threat hunting measures to detect future intrusions before data exfiltration occurs. At which Cyber Kill Chain phase was the attack identified?",
+    "options": {
+      "A": "Command & Control (C2)",
+      "B": "Delivery",
+      "C": "Actions on Objectives",
+      "D": "Exploitation"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "51. A SOC analyst receives an alert indicating that the system time on a critical Windows server was changed at 3:00 AM. There are no scheduled maintenance tasks at this time. Unauthorized time changes can be used to evade security controls, such as altering timestamps to obscure malicious activity. The analyst must identify the relevant event codes that log system time modifications and related suspicious behavior. Whina of the following Windows Security Event Codes should the analyst review to investigate potential tampering?",
+    "options": {
+      "A": "4625 and 4634",
+      "B": "4616 and 4624",
+      "C": "4616 and 4618",
+      "D": "4608 and 4609"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "52. David is working as a SOC analyst in an institution, responsible for monitoring the security of critical infrastructure. During routine system monitoring, he detects several unauthorized applications running on a high-privilege Windows server that is only accessible by a restricted set of users. These applications were not part of any approved software deployment, and no users have admitted to installing them. He noticed that the installations occurred outside of business hours, and the affected server logs indicate potential system configuration changes around the same timeframe. He suspects that an attacker may have exploited misconfigurations or gained unauthorized access to install malicious software. Which log file should he examine to determine when and how these installations occurred?",
+    "options": {
+      "A": "System Event log",
+      "B": "Security Event log",
+      "C": "Setup Event log",
+      "D": "Application Event log"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "53. A mid-sized healthcare organization is facing frequent phishing and ransomware attacks. They lack an internal SOC and want proactive threat detection and response capabilities. Compliance with HIPAA regulations is essential. The organization seeks a solution that includes both monitoring and rapid response to Incidents. Which service best meets their needs?",
+    "options": {
+      "A": "MSSP with 24/7 log monitoring and incident escalation",
+      "B": "MDR with proactive threat hunting and incident containment",
+      "C": "Cloud-based SIEM with MSSP- Managed services",
+      "D": "Self-hosted SIEM with in-house SOC analysts"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "54. The Security Operations Center (SOC) team is investigating a suspected malware incident during the Analysis Phase of their incident response process. Their primary goal is to validate the initial detection, ensure the threat is real, and gather critical intelligence to understand the scope of the attack. Which of the following actions should the SOC team take to confirm their initial findings and eliminate false alarms?",
+    "options": {
+      "A": "Verify generated logs",
+      "B": "Root-cause analysis",
+      "C": "Scan the enterprise environment and update the scope",
+      "D": "Verify false positives"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "55. You are a SOC analyst on duty when the team receives an alert about a ransomware incident affecting the organization's email infrastructure. The forensic analysis, conducted by the incident response team (IRT). identifies that the ransomware exploited CVE-2024-0123 in an unpatched mail server. The IRT is now actively deploying emergency patch KB5025941, updating mail filtering rules to block malicious payloads, and implementing additional network segmentation to limit lateral movement. Based on this scenario, which phase of the Incident Response process is the SOC currently executing?",
+    "options": {
+      "A": "Evidence Gathering and Forensic Analysis",
+      "B": "Containment",
+      "C": "Recovery",
+      "D": "Eradication"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "56. Sarah, a financial analyst at a multinational corporation, is suspected of leaking sensitive financial data to an unauthorized external party. The SOC team has observed anomalous data transfer patterns originating from her account, flagged by the SIEM system, indicating potential data exfiltration. The incident response team within the SOC has been tasked with containing the incident swiftly to minimize data loss and protect critical assets. As a SOC analyst, which of the following should be prioritized as the initial containment measure to address this threat?",
+    "options": {
+      "A": "Access Control",
+      "B": "Change Passwords Regularly",
+      "C": "Isolate the Storage",
+      "D": "Data Centric Audit and Protection (DCAP)"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "57. Lisa Carter, a SOC analyst at a financial services firm, is performing a risk assessment following a series of suspicious alerts detected by the SIEM (Security Information and Event Management) system. Her task is to evaluate the risk of a potential data breach prioritizing incident response effort. She assesses three key factors: the likelihood of an attack succeeding based on current threat intelligence, the impact on critical business operations if the breach occurs, and the value of the assets targeted (e.g., customer data, financial systems). Using the standard risk assessment formula, which of the following scenarios represents the highest risk to the organization?",
+    "options": {
+      "A": "High Likelihood, High Impact, High Asset Value",
+      "B": "High Likelihood, Low Impact, High Asset Value",
+      "C": "Low Likelihood, High Impact, Low Asset Value",
+      "D": "Low Likelihood, Low Impact, High Asset Value"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "58. An attacker attempts to gain unauthorized access to a secure network by repeatedly guessing login credentials. The SIEM is configured to generate an alert after detecting 10 consecutive failed login attempts within a short timeframe. However, the attacker successfully logs in on the 9th attempt, just before the threshold is reached, bypassing the alert mechanism. Security teams only become aware of the incident after detecting suspicious activity post-login, highlighting a gap in the SIEM's detection rules. What type of alert classification does this represent?",
+    "options": {
+      "A": "True Negative",
+      "B": "True Positive",
+      "C": "False Positive",
+      "D": "False Negative"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "59. A SOC team at a major financial institution detects unauthorized access attempts on its web application. The security team reviews the logs to find the web application is compromised. To determine the exact attack technique used and implement necessary mitigation measures, the forensic investigators is assessing cookie attributes (such as HTTP Only, Secure, and SameSite) for security weaknesses, and track anomalous request patterns that deviate from normal user behavior. Which of the following attack vectors is the forensic team investigating in the above investigation?",
+    "options": {
+      "A": "Cross-Site Scripting (XSS)",
+      "B": "Man-in-the-Middle (MITM) Attack",
+      "C": "SQL Injection",
+      "D": "Session Poisoning"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "60. A SOC team notices that malware-related incidents have increased over the past six months, targeting endpoints through phishing campaigns. They need to present a report to the security leadership team to justify investing in advanced email filtering solutions and end-user security training. Which SOC report will best support their case?",
+    "options": {
+      "A": "Trend Analysis Report",
+      "B": "Incident Report",
+      "C": "Real-time Monitoring Report",
+      "D": "Monitoring Summary Report"
+    },
+    "answer": "A",
+    "marks": 1
+  }
+]

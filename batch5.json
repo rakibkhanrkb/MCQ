@@ -1,0 +1,222 @@
+[
+  {
+    "text": "81. You are working in the Cyber Security team of Global Solutions Inc., a multinational corporation as a L2 SOC analyst. The corporation utilizes syslog for centralized logging across its geographically diverse network. Your team is tasked with ensuring that security logs are reliably sent out from various remote sites to the central logging server, even across potentially unreliable network connections and diverse network infrastructure. To guarantee consistent and dependable log delivery in their syslog infrastructure, which architectural layer of syslog should your team primarily focus on optimizing and hardening?",
+    "options": {
+      "A": "Syslog Transport Layer",
+      "B": "Syslog Application Layer",
+      "C": "Syslog Content Layer",
+      "D": "Syslog Management and Filtering"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "82. You are a SOC analyst working for a leading financial institution, and you have been assigned the task of developing a comprehensive threat model to safeguard the organization's critical assets. These assets include highly sensitive customer data, online banking applications, and real-time payment processing systems. Recently, your organization has observed an increase in targeted cyberattacks on financial entities, including credential theft, account takeovers, and sophisticated phishing campaigns. Senior management is particularly concerned about the potential financial and reputational damage that could result from a breach. To address these concerns, you must focus on intelligence that provides insights into high-level risks, geopolitical threats, and emerging cybercriminal strategies that could have long-term implications for your organization's security posture. Which type of threat intelligence are you seeking to obtain?",
+    "options": {
+      "A": "Operational Threat Intelligence",
+      "B": "Tactical Threat Intelligence",
+      "C": "Strategic Threat Intelligence",
+      "D": "Technical Threat Intelligence"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "83. You are a Threat Hunter in an IT company's security team that is working to enhance its threat hunting capabilities. You observed that relying solely on traditional security alerts often results in missed detections of sophisticated threats. To strengthen your approach, you decide to incorporate multiple data sources, including external threat intelligence feeds, internal security logs, network traffic data, and endpoint telemetry. To efficiently process this vast amount of data, you are implementing a new tool that can aggregate, normalize, and correlate threat intelligence with internal telemetryyou aim to gain a more holistic understanding of emerging threats and enhance detection accuracy. What is the key capability of threat detection being leveraged in this scenario?",
+    "options": {
+      "A": "Threat Reports",
+      "B": "Threat Trending",
+      "C": "Intelligence Buy-in",
+      "D": "Data Integration"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "84. A SOC analyst detects multiple instances of powershell.exe being launched with the ExecutionPolicy Bypass and -NoProfile arguments on a domain controller. The parent process is winrm.exe, and the activity occurs during non-business hours. What should be the analyst's primary focus?",
+    "options": {
+      "A": "Look for Event ID 4625 to check for failed authentication attempts before execution",
+      "B": "Review Event ID 5145 to see if unauthorized network shares were accessed",
+      "C": "Search for Event ID 4688 to find similar PowerShell executions within the last 24 hours",
+      "D": "Investigate Event ID 7045 to determine if a malicious service was created"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "85. Bob is a SOC analyst in a multinational corporation that relies on a centralized file sharing system for storing confidential project documents. One morning, he notices that few critical financial records stored on the shared server appear to have been altered without authorization Upon further analysis, he discovers that the version history confirms unexpected changes made outside of business hours. Now he must investigate by inspecting the logs. Which log should he check to determine who accessed the files and when the modifications occurred?",
+    "options": {
+      "A": "Security logs",
+      "B": "Authentication logs",
+      "C": "Firewall logs",
+      "D": "Network log"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "86. Global Security Firm, a multinational cybersecurity company, is looking to enhance its threat intelligence capabilities by integrating real-time threat feeds into its Microsoft Sentinel SIEM. These threat intelligence feeds contain valuable information about malicious IPs, domains, file hashes, and attack patterns, helping the SOC team proactively detect and respond to security threats. The firm requires a standardized protocol that allows automated threat intelligence sharing, ensuring that their Microsoft Sentinel environment continuously receives updated threat indicators from external intelligence sources. The ideal data connector should support a structured format for importing and managing threat intelligence feeds efficiently. Which Microsoft Sentinel data connector should Global Security Firm implement to integrate threat intelligence feeds using an industry-standard protocol?",
+    "options": {
+      "A": "Microsoft Defender for Cloud (Legacy) connector",
+      "B": "Syslog connector",
+      "C": "TAXII data connector",
+      "D": "Threat Intelligence Platforms data connector"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "87. Global Bank, a large financial institution, relies heavily on Microsoft Azure to host its critical banking applications and services, including customer transactions, financial data processing, and risk assessment systems. Given the highly regulated nature of the banking industry, the security operation center team must ensure continuous monitoring, compliance with financial regulations, and real-time threat detection across all Azure resources. To achieve this, the team requires a comprehensive solution that can collect, analyze, and visualize telemetry data from various cloud resources, virtual machines, storage accounts, and applications. The solution must also integrate seamlessly with their security tools, allowing them to detect anomalies, monitor performance, and respond proactively to potential security threats. Which Azure service is best suited to in the given situation?",
+    "options": {
+      "A": "Azure Policy",
+      "B": "Azure Monitor",
+      "C": "Azure Active Directory",
+      "D": "Azure Firewall"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "88. Mark Reynolds, a SOC analyst at a healthcare organization, is monitoring the SIEM system when he detects a potential security threat: a series of unusual login attempts targeting critical patient data servers. After investigating the alerts and collaborating with the incident response team, the SOC determines that the threat has a \"Likely chance of occurring and could cause \"Significant\" damage, including operational disruptions, financial loss due to data breaches, and regulatory penalties under HIPAA. Using a standard Risk Matrix, how would this risk be categorized in terms of overall severity?",
+    "options": {
+      "A": "Low",
+      "B": "Very High",
+      "C": "High",
+      "D": "Medium"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "89. Following a high-priority security incident, you, as an Incident Responder of a Cyber Incident Response firm, initiate an internal investigation after reports confirm that serious data breach in which sensitive customer data, including payment details and personal information, was stolen from a critical web server. You begin analyzing the server logs to reconstruct the attack timeline and identify how the attacker gained access. During your investigation, you discover suspicious activity in the logs, including repeated requests attempting to access files and directories outside of the web server's root directory. Some of these requests appear to be manipulating URL paths to navigate into restricted system files-a behavior that is often associated with web-based exploits. You suspect that a vulnerability in the web server was exploited to bypass security restrictions and access unauthorized directories, potentially exposing sensitive configurations and credentials. However, they still need to confirm the exact technique used to perform this attack. Which type of web application attack might have caused this incident?",
+    "options": {
+      "A": "SQL Injection Attack",
+      "B": "Directory Traversal",
+      "C": "Session Attacks: Cookie Poisoning Attacks",
+      "D": "Cross-site Scripting (XSS) Attacks"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "90. Katie is working in the Cyber Security department of an international Financial Corporation INT FIN Corp. as a SOC analyst. She is responsible for monitoring logs to detect potential security threats in real time. Her team needs to implement a functionality as part of incident response plan such that the system that it continuously scans logs for anomalies, identifies suspicious activities, and want to be notfied when predefined security thresholds are reached as well as generate incidents or issue tickets to ensure immediate response and mitigation. It must provide critical details such as the type of event, its duration, the affected device, and its OS version. Which function should she configure to achieve this?",
+    "options": {
+      "A": "Alerting and Reporting",
+      "B": "Log normalization",
+      "C": "Log parsing",
+      "D": "Log collection"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "91. David Reynolds, a SOC analyst at a healthcare organization, is investigating a series of suspicious login attempts flagged by the SIEM (Security Information and Event Management) system. To mitigate the risk of brute-force attacks on the target end points, he collaborates with the IT team to implement an automatic account lockout policy. This policy temporarily disables user accounts after multiple failed login attempts, preventing attackers from repeatedly guessing passwords to gain unauthorized access. Within the SOC's eradication strategy, which category of measures does this action align with?",
+    "options": {
+      "A": "Network Security Measures",
+      "B": "Physical Security Measures",
+      "C": "Authentication and Authorization Measures",
+      "D": "Host Security Measures"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "92. A financial institution suspects an insider threat due to unauthorized access attempts on restricted databases. However, the SIEM alerts lack sufficient information to differentiate between legitimate and malicious access. The SOC manager recommends integrating contextual data to improve detection. Which contextual data source is required to be integrated in this scenario?",
+    "options": {
+      "A": "User context from HR systems",
+      "B": "Location and physical context from GPS sensors",
+      "C": "Vulnerability context",
+      "D": "Threat context from external threat intelligence feeds"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "93. A security operation center team in a large financial institution is working on implementing a threat intelligence strategy to proactively defend against cyber threats. To ensure the success of this initiative, they need to systematically allocate resources to gather relevant intelligence. The CISO has emphasized that simply collecting data is not enough; the team must focus on assigning specific personnel, tools, and time to gather intelligence that aligns with the organization's most pressing security concerns, such as fraud detection, phishing campaigns, and nation-state threats targeting financial transactions. As part of this structured approach, the team must determine who will be responsible for collecting intelligence, what sources will be monitored, and how frequently data should be gathered. This step ensures that the right resources are applied to the most relevant intelligence efforts. What is this process called?",
+    "options": {
+      "A": "High-Level Requirements",
+      "B": "Resources",
+      "C": "Tasking",
+      "D": "Prioritization"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "94. A financial services company is implementing a SIEM solution to enhance its cybersecurity posture. Despite deploying the SIEM, the security team notices that it fails to detect known attacks or suspicious activities. Although the system generates reports, the team struggles to interpret them effectively. After investigation, they discovered that critical logs from firewalls, intrusion detection systems (IDS), and endpoint devices are not reaching the SIEM. What is the reason the SIEM solution is not functioning as expected?",
+    "options": {
+      "A": "Improper configuration or design of the SIEM deployment architecture",
+      "B": "Lack of understanding of SIEM features and capabilities",
+      "C": "Difficulty handling the volume of collected log data",
+      "D": "Delays in log collection and analysis due to system performance issues"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "95. A rapidly growing e-commerce company wants to implement a SIEM solution to improve its security posture and comply with PCI DSS requirements. They need a solution that offers both the necessary technological features and the expertise to manage the system effectively. They also need to ensure continuous compliance support and data security assistance. Which of the following SIEM solutions is appropriate for this company?",
+    "options": {
+      "A": "Cloud-based SIEM",
+      "B": "In-house SIEM",
+      "C": "Managed SIEM",
+      "D": "Security analytics"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "96. At 9:15 AM EST, Marcus Wong, a Financial Operations analyst at GlobalTech, contacts the SOC team after noticing that his Excel spreadsheets are automatically encrypting themselves with unusual file extensions (e.g... locked or crypt). The SOC's Tier 1 analyst logs the incident as ticket #INC-89271 in the SIEM system Jand escalates it to Jennifer Park, a Tier 2 SOC analyst on the Security Team, for further investigation. Which phase of the Incident Response process is currently taking place?",
+    "options": {
+      "A": "Containment",
+      "B": "Incident Recording and Assignment",
+      "C": "Notification",
+      "D": "Incident Triage"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "97. A large financial institution receives thousands of security logs daily from firewalls, IDS systems, and user authentication platforms. The SOC team uses an Al-driven SIEM system with NLP capabilities to streamline threat detection. This approach enables faster response times, reduces manual rule creation, and helps detect advanced threats that traditional systems might overlook. Which of the following BEST illustrates the advantage of NLP in SIEM?",
+    "options": {
+      "A": "Allows security analysts to write SIEM rules using complex programming languages",
+      "B": "Simplifies infrastructure management by reducing hardware dependencies",
+      "C": "Eliminates the need for data normalization and correlation in SIEM systems",
+      "D": "Enables analysis of text-based data from logs and communications to detect threats"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "98. A multinational financial institution notices unusual network activity during a routine security audit. The SOC (Security Operations Center) detects multiple failed login attempts, followed by a successful access attempt using an administrator's credentials from an unrecognized IP address. Shortly after, sensitive customer records are accessed without authorization. The company suspects a potential security breach and calls in the forensic investigation team to analyze the incident. During evidence collection, the forensic team creates a detailed record that tracks every individual who handled the evidence, its storage location, and timestamps of transfers. What is this process called?",
+    "options": {
+      "A": "Data Imaging",
+      "B": "Incident Documentation",
+      "C": "Digital Fingerprinting",
+      "D": "Chain of Custody"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "99. Mark Reynolds, an SOC analyst at a global financial institution, is working on the eradication phase of an incident response plan after detecting a wave of phishing attacks targeting employees. To ensure attackers cannot reuse their malicious infrastructure, Mark implements a technique that blocks known malicious IP addresses used for sending spam emails at the Domain name system level. Which of the following techniques is best suited for this purpose?",
+    "options": {
+      "A": "IP Address Blacklisting at the Firewall",
+      "B": "SMTP Server Filtering",
+      "C": "DNS Blackholing",
+      "D": "URL Blacklisting on Web Proxies"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "100. You are working with a team of SOC analysts in a large corporation company, the HR department receives an urgent email from someone impersonating a high-level executive, requesting immediate transfer of sensitive employee data. The email includes an official-looking document and a phone number for verification. Feeling pressured, the HR manager calls the number and confirms the request. After transfer of the data, you notice this unusual data transfer and your team investigates to discover that the email was fraudulent, and the executive had no knowledge of the request. What type of attack did your HR department face in this scenario?",
+    "options": {
+      "A": "Application Exploit",
+      "B": "Credential Theft",
+      "C": "Web-Based Intrusion",
+      "D": "Social Engineering Attack"
+    },
+    "answer": "D",
+    "marks": 1
+  }
+]

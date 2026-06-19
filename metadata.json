@@ -1,0 +1,6 @@
+{
+  "name": "ICT MCQ TEST",
+  "description": "A professional MCQ exam system with admin management, real-time question bank, and exam history tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

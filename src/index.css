@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-bengali: "Noto Sans Bengali", sans-serif;
+  
+  --color-bg: #eff7f6; /* Beautiful soft cool teal-gray light background */
+  --color-surface: #ffffff; /* pure white surface cards */
+  --color-surface-hover: #f1f8f7; /* clean and delicate soft mint state hover */
+  --color-border: #cbdad8; /* light sage border to gently frame elements */
+  --color-accent: #7c3aed; /* vibrant purple (like the brand/active state color the user pointed to) */
+  --color-accent-soft: rgba(124, 58, 237, 0.08);
+  --color-accent2: #4f46e5; /* rich indigo secondary accent */
+  --color-success: #0f5a47; /* deep forest teal for success elements */
+  --color-danger: #dc2626; /* clear crimson for error states */
+  --color-warning: #ea580c; /* clean orange warning */
+  --color-text-main: #0f172a; /* deep charcoal-slate for maximum reading clarity */
+  --color-text-dim: #475569; /* cool dark gray sub-label texts */
+  --color-gold: #b45309; /* warm bronze-gold */
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+.dark {
+  --color-bg: #0b0716; /* deep cosmic dark background */
+  --color-surface: #130f24; /* rich dark violet card surface */
+  --color-surface-hover: #1e1837; /* lighter purple selection hover state */
+  --color-border: #281f44; /* matching violet-dark frame borders */
+  --color-accent: #a78bfa; /* lighter radiant lavender-purple for dark contrast */
+  --color-accent-soft: rgba(167, 139, 250, 0.08);
+  --color-accent2: #818cf8; /* warm bright indigo secondary accent */
+  --color-success: #10b981; /* bright emerald for clear dark success indicators */
+  --color-danger: #f87171; /* bright reddish-rose */
+  --color-warning: #fb923c; /* warm bright dark orange */
+  --color-text-main: #f8fafc; /* high reading contrast near-white slate */
+  --color-text-dim: #94a3b8; /* smooth comfortable reading sub-text */
+  --color-gold: #fbbf24; /* deep yellow gold */
+}
+

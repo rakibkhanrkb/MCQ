@@ -1,0 +1,220 @@
+[
+  {
+    "text": "21. Mark Reynolds, a SOC analyst at a healthcare organization, is monitoring the SIEM system when he detects a potential security threat: a series of unusual login attempts targeting critical patient data servers. After investigating the alerts and collaborating with the incident response team, the SOC determines that the threat has a \"Likely\" chance of occurring and could cause \"Significant damage, including operational disruptions financial loss due to data breaches, and regulatory penalties under HIPAA. Using a standard Risk Matrix, how would this risk be categorized in terms of overall seventy?",
+    "options": {
+      "A": "Very High",
+      "B": "High",
+      "C": "Low",
+      "D": "Medium"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "22. Jake Carter, a SOC analyst at a financial institution in New York, is responsible for monitoring network traffic to detect potential data exfiltration attempts. His team uses a security solution that inspects data packets in real time as they traverse the network. During an incident response, Jake observes that the solution struggles to analyze encrypted traffic, limiting its effectiveness in identifying threats hidden within secure communications. Which security control, with this known limitation, is the SOC team relying on?",
+    "options": {
+      "A": "SSH",
+      "B": "VPN",
+      "C": "IPsec"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "23. A security team is designing SIEM use-case logic to detect privilege escalation attempts on Windows servers. They have already identified and validated the necessary event sources (e.g. Active Directory logs, Windows Security logs. What should be their next step in the use case logic development process?",
+    "options": {
+      "A": "Collect historical security logs to confirm the use case is necessary",
+      "B": "Define correlation rules and conditions that detect specific privilege escalation patterns",
+      "C": "Implement and test the use case immediately in the production SIEM environment",
+      "D": "Define response actions for detected incidents before writing the rules"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "24. As a Threat Hunter at a Cyber Security company, you notice that several endpoints in the organization are experiencing unusual outbound traffic to an unfamiliar IP address. The traffic is encrypted and occurs in small bursts at irregular intervals. There are no known locs associated with the destination, and traditional security tools have not flagged it as malicious. You decide to launch a threat-hunting initiative to determine whether this is an advanced persistent threat (APT) using sophisticated techniques to evade detection. The goal is to identify potential Indicators of Attack (loAs) and map them against known adversary behaviors. What type of threat hunting approach would you choose that is suited for this situation?",
+    "options": {
+      "A": "Reactive Hunting",
+      "B": "Situational or Entity-driven Hunting",
+      "C": "Structured Hunting",
+      "D": "Unstructured Hunting"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "25. You are working as a SOC analyst in a multinational company with multiple data centers and remote offices. Security logs are stored locally at each site, making it difficult to correlate incidents across different locations. Recently, an advanced persistent threat (APT) compromised multiple servers, but due to multiple sources of logs and inconsistent monitoring, the attack was detected only after significant data exfiltration had occurred. To improve visibility, streamline log analysis, and enable faster incident response, you need to implement a solution that aggregates logs from all sources into a unified system. Which solution will you implement for your organization?",
+    "options": {
+      "A": "Event tracing",
+      "B": "Distributed logging",
+      "C": "Centralized logging",
+      "D": "Local logging"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "26. A SOC analyst is responsible for designing a security dashboard that provides real-time monitoring of security threats. The organization wants to avoid overwhelming analysts with excessive information and focus on the most critical security alerts to ensure timely responses to potential threats. Which principle should guide the design of the dashboard?",
+    "options": {
+      "A": "Include as much data as possible to ensure complete visibility",
+      "B": "Use only historical data to avoid real-time inconsistencies",
+      "C": "Restrict dashboard access to only network administrators",
+      "D": "Prioritize critical information and remove unnecessary details"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "27. A government agency responsible for protecting sensitive information needs to monitor its network for unusual data exfiltration attempts. Since traditional log data alone is insufficient to identify suspicious traffic patterns, the SIEM team decides to integrate traffic flow data into their system. This data will help detect anomalies, such as large data transfers to unauthorized destinations or unexpected traffic spikes. The team must choose the appropriate protocol to collect IP traffic information from network devices like routers and switches. Which protocol should be used to collect this data?",
+    "options": {
+      "A": "IPFIX (IP Flow Information Export)",
+      "B": "Syslog",
+      "C": "NetFlow (RFC 3954)",
+      "D": "SNMP (Simple Network Management Protocol)"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "28. Jannet works in a multinational corporation that operates multiple data centers, cloud environments, and on-premises systems as a SOC analyst, she notices that security incidents are taking too long to detect and investigate. After analyzing this, she discovers that logs from firewalls, endpoint security solutions, authentication servers, and cloud applications are scattered across different systems in various formats hence her team has to manually convert logs into a readable format before investigating incidents. What approach should she implement to enable accepting the logs from heterogeneous sources with different formats and converting them into common format and improving incident detection and response time?",
+    "options": {
+      "A": "Log collection",
+      "B": "Log normalization",
+      "C": "Log correlation",
+      "D": "Log transformation"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "29. An organization with a complex IT infrastructure is planning to implement a SIEM solution to improve its threat detection and response capabilities. Due to the scale and complexity of its systems, the organization opts for a phased deployment approach to ensure a smooth implementation and reduce potential risks. Which of the following should be the first phase in their SIEM deployment strategy?",
+    "options": {
+      "A": "Configure security analytics to identify potential threats",
+      "B": "Implement User and Entity Behavior Analytics (UEBA)",
+      "C": "Automate incident response processes",
+      "D": "Set up the log management component before deploying the SIEM component"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "30. A Security Operations Center (SOC) analyst receives a high-priority alert indicating unusual user activity. An employee account is attempting to access company resources from a different country and outside of their normal working hours. This behavior raises concerns about potential account compromise or unauthorized access to automate the initial response and quickly restrict access while further investigating the incident, which SOAR Playbook would be relevant to adapt and implement?",
+    "options": {
+      "A": "Deprovisioning Users SOAR Playbook",
+      "B": "Malware Containment SOAR Playbook",
+      "C": "Alert Enrichment SOAR Playbook"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "31. The Security Operations Center (SOC) team at Rapid Response Group, a leading cybersecurity firm, is facing challenges in managing security incidents efficiently. With an increasing volume of alerts and security events being generated daily in their Microsoft Sentinel environment, the team is struggling to respond to threats quickly and consistently. To enhance their incident response capabilities, they aim to automate routine security tasks, such as log collection, alert triaging, remediation steps, and notifications to stakeholders. By implementing automated workflows, they seek to reduce response times, eliminate manual intervention for repetitive actions, and ensure a standardized approach to handling security threats across the organization. Which component of Microsoft Sentinel should they utilize to create these automated workflows for incident response?",
+    "options": {
+      "A": "Workspace",
+      "B": "Analytics",
+      "C": "Community",
+      "D": "Playbooks"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "32. Secure Tech Inc, a leading cybersecurity-focused organization, operates its critical infrastructure and applications in AWS. The Security Operations Center (SOC) team is responsible for detecting, investigating, and mitigating security threats within their cloud environment. Recently, the SOC team has observed an increase in suspicious activities, such as unexpected API calls, unusual outbound traffic from instances, and DNS requests to potentially malicious domains. To enhance their threat detection capabilities, they need a fully managed AWS security service that can continuously monitor for malicious activity across their AWS environment, analyze AWS CloudTrail logs, VPC Flow Logs, and DNS query logs, leverage machine learning and threat intelligence to identify advanced threats, and provide actionable security findings to accelerate response efforts. Which AWS service is best suited to help Secure Tech Inc. proactively detect and respond to security threats in their AWS environment?",
+    "options": {
+      "A": "AWS Config",
+      "B": "AWS Security Hub",
+      "C": "Amazon Macie",
+      "D": "Amazon Guard Duty"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "33. At 10:30 AM, during routine monitoring, SOC's Tier-1 Jennifer detects unusual network traffic and confirms an active Lock Bit ransomware infection targeting systems in the finance department. She escalates the issue to the SOC lead, Sarah, who activates the Incident Response Team (IRT) and instructs the network team to isolate the finance department's VLAN to prevent further spread across the network. Which phase of the Incident Response process is currently being implemented?",
+    "options": {
+      "A": "Containment",
+      "B": "Evidence Gathering and Forensic Analysis",
+      "C": "Eradication",
+      "D": "Notification"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "34. A security analyst working in a multinational corporation's Threat Intelligence team is tasked with enhancing the organization's ability to detect stealthy malware infections. During an investigation, the analyst observes an unusually high volume of DNS requests directed toward domains that follow patterns commonly associated with Domain Generation Algorithms (DGAs), Recognizing that these automated domain queries could indicate a malware strain attempting to establish communication with its Command & Control [C2] infrastructure, the analyst realizes that existing detection capabilities may not be sufficient. To effectively counter such threats, the security team needs to define intelligence requirements including identifying critical data sources, refining detection criteria, and improving threat monitoring strategies. Which stage of the Cyber Threat Intelligence (CTI) process does this scenario align with?",
+    "options": {
+      "A": "Filtering CTI",
+      "B": "Intelligence Buy-In",
+      "C": "Requirement Analysis",
+      "D": "Automated tool"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "35. A healthcare organization's SIEM detects a series of unusual HTTP requests targeting its patient portal. The requests originate from a foreign IP address and occur during non business hours. The methods used are primarily TRACE and OPTIONS, which are rarely seen in normal web traffic. The SIEM correlates these events with an increase in reconnaissance activity on other servers within the same subnet. What is the primary security concern with TRACE and OPTIONS requests?",
+    "options": {
+      "A": "They can be used to upload malicious payloads directly to the server",
+      "B": "They make Distributed Denial of Service (DDoS) attack easier",
+      "C": "They expose information about server-supported methods and request headers",
+      "D": "They allow attackers to bypass authentication controls"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "36. Global Security Firm, a multinational cybersecurity company, is looking to enhance its threat intelligence capabilities by integrating real-time threat feeds into its Microsoft Sentinel SIEM, these threat intelligence feeds contain valuable information about malicious IPs, domains, file hashes, and attack patterns, helping the SOC team proactively detect and respond to security threats. The firm requires a standardized protocol that allows automated threat intelligence sharing, ensuring that their Microsoft Sentinel environment continuously receives updated threat indicators from external intelligence sources. The ideal data connector should support a structured format for importing and managing threat intelligence feeds efficiently. Which Microsoft Sentinel data connector should Global Security Firm implement to integrate threat intelligence feeds using an industry standard protocol?",
+    "options": {
+      "A": "Microsoft Defender for Cloud (Legacy) connector",
+      "B": "Threat Intelligence Platforms data connector",
+      "C": "TAXI data connector",
+      "D": "Syslog connector"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "37. DNS logs in the SIEM show an internal host sending many DNS queries with long encoded subdomains to an external domain. The curries predominantly use TXT records and occur during off-business hours. The external domain is newly registered and has no known business association. Which of the following best explains this behavior?",
+    "options": {
+      "A": "Identifying DNS tunneling for data exfiltration",
+      "B": "Validating ONS records for legitimate business operations",
+      "C": "Detecting rogue DNS servers within the internal network",
+      "D": "Monitoring DNS cache poisoning attempts"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "38. A leading e-commerce company relies on backend servers for processing customer transactions. You are working with their cybersecurity team as a SOC analyst. One morning, you notice a sharp increase in CPU utilization on one of your backend servers. Your team scans and monitors the server and find out that an unknown process is running, which is consuming excessive resources. You further perform detailed forensic analysis and identify the presence of an unrecognized scheduled task that triggers a PowerShell script connecting to an unknown IP. What should you do to confirm whether this is an active attack?",
+    "options": {
+      "A": "Check file integrity and detect recent unauthorized changes",
+      "B": "Analyze the network logs to identify external connections",
+      "C": "Review user access logs for unauthorized activity",
+      "D": "Analyze the system logs for unauthorized changes"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "39. The SOC team at Global Tech has just finished patching a critical vulnerability exploited during a ransomware attack. The team is now restoring 2.378 of encrypted data from their Veeam backup system, rebuilding 23 compromised workstations identified through SIEM logs and re-enabling network access for the finance department after validating the systems are clean. Which of the following Incident Response phase is this?",
+    "options": {
+      "A": "Post-incident Activities",
+      "B": "Recovery",
+      "C": "Eradication",
+      "D": "Containment"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "40. You are a SOC analyst on duty during a high-severity incident involving a DDoS attack targeting your organization's e-commerce platform. The attack is disrupting online transactions, and the incident response team has tasked you with analyzing live network traffic using the SOC's SIEM tools and packet capture systems. After identifying unusual traffic patterns and dissecting communication protocols, you trace the activity back to several command-and-control (C2) servers directing a botnet. Your goal is to recommend an eradication strategy that will serve the attackers' control over the infected devices and halt the attack. Based on this scenario, which of the following strategies will your team implement?",
+    "options": {
+      "A": "Rate Limiting",
+      "B": "Blocking Potential Attacks",
+      "C": "Disabling Botnets",
+      "D": "Neutralizing Handlers"
+    },
+    "answer": "D",
+    "marks": 1
+  }
+]

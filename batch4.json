@@ -1,0 +1,222 @@
+[
+  {
+    "text": "61. A mid-sized hospital's SOC team has recently detected multiple malware incidents that have disrupted access to patient records and caused operational inefficiencies. The SOC analysts have been tasked with eradicating the current infections and preventing future attacks by addressing the underlying vulnerabilities that allowed the malware to breach the hospital's defenses. As an SOC analyst, you need to recommend a step that directly targets the weaknesses in the hospital's network infrastructure or system configurations exploited by the malware. Which of the following eradication steps would best address these root causes?",
+    "options": {
+      "A": "Fixing Devices",
+      "B": "Implementing Blacklist techniques for file execution",
+      "C": "Using Antivirus Tools for quarantine",
+      "D": "Updating Malware Database with vendor signatures"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "62. A SIEM alert is triggered due to unusual network traffic involving NetBIOS. The System log shows that \"The TCP/IP NetBIOS Helper service entered the running state\". Concurrently, Event Code 4624: \"An account was successfully logged on appears for multiple machines within a short time frame. The logon type is identified as 3 (Network logon). Which of the following security incidents is the SIEM detecting?",
+    "options": {
+      "A": "A user connecting to shared files from multiple workstations",
+      "B": "An attacker performing lateral movement within the network",
+      "C": "A network administrator conducting routine maintenance",
+      "D": "A malware infection spreading via SMB protocol"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "63. A newly hired SOC analyst has just joined a fast-growing multinational organization that manages a vast IT infrastructure across multiple regions. The analyst's first task is to quickly assess the company's external exposure and identify potential security risks before threat actors can exploit them. To begin the assessment, the analyst considers various techniques, including analyzing publicly available information, scanning for exposed services, reviewing DNS records, and gathering intelligence from external sources. However, given the sheer volume of data spanning multiple subsidiaries, cloud environments, and third-party integrations, the analyst quickly realizes that some methods may not scale well for large, complex infrastructures and may lead to delays or incomplete insights. Which technique is less practical for handling large or diverse data sets in this scenario?",
+    "options": {
+      "A": "Stack Counting",
+      "B": "OSINT",
+      "C": "DNS Lookup",
+      "D": "Web Enumeration"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "64. James Rodriguez has recently taken over as the lead SOC manager at Global Tech Dynamics, a Fortune 500 company with a growing cyber threat landscape. She is tasked with strengthening the SOC's capabilities to protect the organization's critical assets. Her team is currently deploying a $2M state-of-the-art SOC facility, creating detailed incident response playbooks, running tabletop exercises to simulate real-world attacks, and training a 15-member incident response team to handle alerts and incidents efficiently. In the context of the Incident Response Process Flow, which phase best aligns with these activities?",
+    "options": {
+      "A": "Recovery",
+      "B": "Incident Triage",
+      "C": "Preparation",
+      "D": "Incident Recording and Assignment"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "65. A financial services company hosts an online banking platform accessible via a public web portal. The SOC tean has deployed Snort IDS to monitor HTTP traffic for potential attacks targeting the login page. One day, a user attempts to log in multiple times, generating a series of failed authentication events. During this time, Snort IDS triggers an alert based on the following rule: alert tep any any any 80 (msg: SQL Injection attempt detected\"; content: OR \"TT\"; nocase, sid:1000001; rev:1;) The alert indicates that an incoming HTTP request contained the classic SQL injection payload' OR '11, which is commonly used to bypass login authentication by always evaluating to true. The SIEM, integrated with Snort, receives this alert and correlates it with multiple failed logins attempts from the same source IP. This triggers an automated response, temporarily blocking the suspicious IP address and notifying the SOC team. Which detection method is used by this rule?",
+    "options": {
+      "A": "Behavioral-based detection",
+      "B": "Signature-based detection",
+      "C": "Statistical-based detection",
+      "D": "Anomaly-based detection"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "66. As a SOC Administrator at a mid-sized financial institution, you noticed intermittent network slowdowns and unexplained high memory usage across multiple critical systems. Your initial analysis found no traces of malware, but a forensic investigation revealed unauthorized scheduled tasks that executed during off-peak hours. These tasks ran obfuscated scripts that connected to an external C2 server. Further investigations showed that the adversary had gained access months ago through a compromised VPN account, leveraging stolen credentials from a phishing campaign. Which phase of the Advanced Persistent Threat (APT) lifecycle does this scenario align with?",
+    "options": {
+      "A": "Initial intrusion",
+      "B": "Cleanup",
+      "C": "Persistence",
+      "D": "Search and Exfiltration"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "67. Secure Tech Solutions, a managed security service provider (MSSP), is optimizing its log management architecture to enhance log storage, retrieval, and analysis efficiency. The SOC team needs to ensure that security logs are stored in a structured or semi structured format, allowing for easy parsing, querying, and correlation of security events. To achieve this, they decide to implement a log storage format that organizes data in a text file in tabular structure, ensuring each log entry is stored in rows and columns. Additionally, they require a format that supports easy export to databases or spreadsheet-based analysis while maintaining readability. Which log format should the SOC team choose to store logs in a structured or semi-structured format for efficient analysis?",
+    "options": {
+      "A": "Comma-Separated Values (CSV) Format",
+      "B": "Cloud Storage",
+      "C": "Syslog Format",
+      "D": "Database"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "68. A large financial services company has experienced an increasing number of sophisticated cyber threats targeting its critical assets. The company has a Security Operations Center (SOC) that primarily focuses on log collection and basic threat monitoring. However, recent security incidents have revealed gaps in its ability to detect and respond to advanced threats proactively. Senior management has decided to enhance the SOC's maturity by adopting the SOC Capability Maturity Model (CMM). The SOC team conducted an initial assessment using the CMM framework and found that their current state aligns with Level 1. The organization aims to reach Level 3. To achieve this, the 50C must enhance incident response procedures, improve threat intelligence integration, and establish key performance metrics. Additionally, the organization plans to automate incident triage, implement behavior-based analytics, and establish a continuous SOC training program. Based on the SOC Capability Maturity Model, which of the following should be the first priority in transitioning the SOC from Level 1 to Level 3?",
+    "options": {
+      "A": "Outsourcing SOC operations to a Managed Security Service Provider (MSSP) for expertise",
+      "B": "Implementing Al-driven automation for real-time threat detection and response",
+      "C": "Establishing well-defined and repeatable incident response processes.",
+      "D": "Deploying advanced deception technologies to lure attackers."
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "69. The SOC team at Cybersecure Corp is conducting a security review to identify anomalous log entries from their firewall logs. The team needs to extract specific patterns such as email addresses, IP addresses, and URLs to detect unauthorized access attempts. phishing activities, and suspicious external communications. The SOC analyst applies various regular expressions (raged patterns to filter and analyze logs efficiently, for example they use \\b\\d{1,3}\\\\d[1,3],[1,3]\\\\d{1,3}\\b to matches IPv4 addresses, which regex pattern should the SOC analyst use to extract all hexadecimal color codes found in The logs?",
+    "options": {
+      "A": "[a-zA-Z0-9. _%+-] +@[a-zA-Z0-9-] +\\. [a-zA-Z]{2}",
+      "B": "#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}",
+      "C": "\\b\\d {1,3} \\.\\d{1,3} \\.\\d{1.3}\\,\\d{1.3}\\b",
+      "D": "(0[ (1.9]|1[0-2])/(0[1-9]|[12][0-9]|3{01})^d{4}"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "70. At Global Tech, a multinational corporation, the SOC team detects a suspicious ransomware outbreak affecting multiple endpoints. After successfully isolating the infected systems from the network, the Digital Forensics team, led by Ray Martinez, begins their investigation. They deploy a forensics workstation to acquire RAM dumps, extract Windows Event Logs, and collect network PCAP files from the compromised hosts. Which phase of the Incident Response lifecycle is currently underway?",
+    "options": {
+      "A": "Recovery",
+      "B": "Containment",
+      "C": "Evidence Gathering and Forensic Analysis",
+      "D": "Eradication"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "71. The SOC team is tasked with enhancing the security of an organization's network infrastructure. The organization's public-facing web servers, which handle customer transactions, need to be isolated from the internal private network containing sensitive employee data and proprietary systems. The goal is to create a buffer zone that limits exposure of internal systems if the web servers are compromised during a cyberattack, such as a DDoS or SQL injection attempt. As a SOC analyst, which network architecture component would you recommend implementing to establish this isolated region?",
+    "options": {
+      "A": "Firewall",
+      "B": "Intrusion Detection Systems (IDS)",
+      "C": "Honeypot",
+      "D": "De-Militarized Zone (DMZ)"
+    },
+    "answer": "D",
+    "marks": 1
+  },
+  {
+    "text": "72. During a routine security audit, analysts discover that several of the organization's web servers are still using a vulnerable third-party library flagged for a zero-day exploit. This vulnerability was identified in a previous audit, and patches were initially deployed to mitigate the risk. However, due to reported application instability and compatibility issues, the application team rolled back the patches, leaving the systems exposed. Despite the known risk, the vulnerability remains unaddressed, and no alternative mitigations have been put in place. Given the state of the web servers and their reliance on outdated, vulnerable software, how should the security team classify this risk in the context of web application security?",
+    "options": {
+      "A": "Software and Data Integrity Failures",
+      "B": "Security Logging and Monitoring Failures",
+      "C": "Vulnerable and Outdated Components",
+      "D": "Insecure Design"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "73. A company's SIEM is generating a high number of alerts, overwhelming the SOC team with false positives and irrelevant notifications. This issue is reducing the team's efficiency, as analysts struggle to identify genuine security incidents. To address this, the security team decides to refine their approach by defining clear threat detection scenarios that align with their environment and risk profile. This new approach is expected to improve detection accuracy and streamline incident response. Which process is the team implementing?",
+    "options": {
+      "A": "IT compliance",
+      "B": "Log forensics",
+      "C": "SIEM Use Case Management",
+      "D": "Security analytics"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "74. Daniel Clark, a cybersecurity specialist working in the Cloud SOC for a government agency, is responsible for ensuring secure access to cloud applications while maintaining compliance with regulatory frameworks. His team needs a security solution that can enforce access policies to prevent unauthorized access to cloud-based applications, monitor and restrict data sharing within SaaS, Paas, and laas environments, ensure compliance with government regulations for data security and privacy, and apply security controls to prevent sensitive data exposure in the cloud. To achieve these objectives, the team has implemented a security technology that governs control over cloud resources, applies security policies, and protects sensitive cloud-stored data. Which Cloud SOC technology is Daniel's team using?",
+    "options": {
+      "A": "Cloud Security Porture Management",
+      "B": "Cloud-native anomaly detection",
+      "C": "Cloud Access Security Broker",
+      "D": "Cloud Workload Protection Platform"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "75. A multinational corporation with strict regulatory requirements (e.g., GDPR, PCI-DSS) needs a SIEM solution to monitor its global network. Data residency laws in certain regions prohibit transferring logs outside local jurisdictions. The company also requires centralized monitoring with 24/7 SOC operations but has limited in-house SIEM expertise. Which SIEM deployment model is appropriate in the given scenario?",
+    "options": {
+      "A": "Self-hosted, MSSP-Managed",
+      "B": "Hybrid Model, Jointly Managed",
+      "C": "Self-hosted, Jointly Managed",
+      "D": "Cloud, MSSP-Managed"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "76. Jackson & Co., a mid-sized law firm, is concerned about potential web-based cyber threats targeting their employees. To enhance security, their IT team implements a solution that serves as an intermediary for all HTTP and HTTPS requests. This solution allows the SOC to inspect, filter and control web traffic, helping to detect and block malicious websites, phishing attempts, and other online threats before they reach users. Which containment method is the organization using to gain visibility and control over web traffic?",
+    "options": {
+      "A": "Whitelisting",
+      "B": "Proxy Servers",
+      "C": "Web Content Filtering",
+      "D": "Blac"
+    },
+    "answer": "B",
+    "marks": 1
+  },
+  {
+    "text": "77. Jennifer, a SOC analyst, initiates an investigation after receiving an alert about potential unauthorized activity on Marcus's workstation. She starts by retrieving EDR logs from the endpoint, analyzing network traffic patterns in the Security Information and Event Management (SIEM) system, and inspecting email gateway logs for signs of malicious attachments. Her objective is to determine whether this alert represents a legitimate security incident. In which phase of the Incident Response process is Jennifer currently operating?",
+    "options": {
+      "A": "Evidence Gathering and Forensic Analysis",
+      "B": "Incident Recording and Assignment",
+      "C": "Incident Triage",
+      "D": "Notification"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "78. You are working as a SOC analyst for a cloud-based service provider that relies on PostgreSQL databases to store critical customer data. During a recent security review, you discover that logs are not being generated for failed authentication attempts, slow queries, or database errors. This lack of visibility is making it difficult for you to detect potential threats and investigate suspicious database activity. To ensure that PostgreSQL captures and stores logs for centralized monitoring and forensic analysis, which configuration parameter should you enable?",
+    "options": {
+      "A": "logging.collector",
+      "B": "loggingcollector",
+      "C": "log_collector",
+      "D": "logging-collector"
+    },
+    "answer": "C",
+    "marks": 1
+  },
+  {
+    "text": "79. Cyberbank, a leading financial institution, has recently experienced a series of cyberattacks, including phishing campaigns, insider threats, and attempted data breaches targeting customer financial records. The bank operates across multiple regions, making it vulnerable to regional compliance violations, fraud attempts, and advanced persistent threats (APTs). During a board meeting, the CISO proposes a security solution that offers continuous security monitoring, rapid threat detection, and centralized visibility across all branches. Which of the following solution will provide automated alerting, digital forensics capabilities, and active threat hunting?",
+    "options": {
+      "A": "Implementing Security Operation Center (SOC)",
+      "B": "Deploying a standalone SIEM (Security Information and Event Management) system",
+      "C": "Implementing SOAR (Security Orchestration, Automation, and Response)",
+      "D": "Implementing periodic security audit"
+    },
+    "answer": "A",
+    "marks": 1
+  },
+  {
+    "text": "80. You are working at T3ch Solutions, global technology firm that provides web and software solutions to many multinational corporations across the globe. Your role is a 12 SOC analyst in their cybersecurity department. Your team detects an adversary attempting to bypass authentication controls and escalate privileges within the enterprise network. To counter the threat, you implement credential encryption, behavioral analytics, and process isolation. Your approach follows a structured framework that systematically maps defensive techniques to known adversarial tactics, allowing you to anticipate and mitigate evolving cyber threats. Which framework did you choose to apply in this scenario?",
+    "options": {
+      "A": "Cybersecurity Capability Maturity Model",
+      "B": "Systems Security Engineering CMM",
+      "C": "NIST Cybersecurity 2.0",
+      "D": "MITRE DIFEND Framework"
+    },
+    "answer": "D",
+    "marks": 1
+  }
+]
