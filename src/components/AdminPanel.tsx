@@ -513,9 +513,16 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     const upass = adminForm.password.trim();
     const uDisplayName = adminForm.name.trim();
 
-    if (!uname || !upass || !uDisplayName) {
-      alert("সমস্ত ঘর পূরণ করা আবশ্যক!");
-      return;
+    if (editingAdminId) {
+      if (!uname || !uDisplayName) {
+        alert("ইউজারনেম এবং নাম পূরণ করা আবশ্যক!");
+        return;
+      }
+    } else {
+      if (!uname || !upass || !uDisplayName) {
+        alert("সমস্ত ঘর পূরণ করা আবশ্যক!");
+        return;
+      }
     }
 
     // Constraint: Hardcore admin rkb_bitBox can modify/create other admins.
@@ -539,12 +546,17 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
           return;
         }
 
-        await updateDoc(doc(db, 'admins', editingAdminId), {
+        const updateData: any = {
           username: uname,
-          password: upass,
           name: uDisplayName,
           role: adminForm.role,
-        });
+        };
+
+        if (upass) {
+          updateData.password = upass;
+        }
+
+        await updateDoc(doc(db, 'admins', editingAdminId), updateData);
         await logActivity("Admin Management", `Modified privileges of admin: "${uDisplayName}"`, `Username: ${uname}, Role: ${adminForm.role}`);
         alert('অ্যাডমিন তথ্য সফলভাবে আপডেট করা হয়েছে!');
         setEditingAdminId(null);
@@ -591,7 +603,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     setEditingAdminId(ad.id || null);
     setAdminForm({
       username: ad.username || '',
-      password: ad.password || '',
+      password: '', // Blank by default, masking current password on edit
       name: ad.name || '',
       role: ad.role || 'admin',
     });
@@ -2723,11 +2735,11 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                   <div className="space-y-1">
                     <label className="text-[10px] font-extrabold text-text-dim uppercase tracking-wider block">Password (পাসওয়ার্ড)</label>
                     <input
-                      type="text"
-                      required
+                      type="password"
+                      required={!editingAdminId}
                       value={adminForm.password}
                       onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
-                      placeholder="Enter password"
+                      placeholder={editingAdminId ? "Keep blank to retain current password (পরিবর্তন না করতে চাইলে ফাঁকা রাখুন)" : "Enter password (পাসওয়ার্ড লিখুন)"}
                       className="w-full bg-surface-hover/50 border border-border/80 rounded-xl p-3 h-11 outline-none text-xs font-semibold transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 focus:bg-surface font-mono"
                     />
                   </div>
@@ -2808,7 +2820,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                           </div>
                         </td>
                         <td className="py-3 px-4 font-mono font-bold text-accent">rkb_bitBox</td>
-                        <td className="py-3 px-4 font-mono font-semibold text-text-dim">rkb580</td>
+                        <td className="py-3 px-4 font-mono font-semibold text-text-dim">••••••••</td>
                         <td className="py-3 px-4 text-center">
                           <span className="bg-amber-100 border border-amber-200 text-amber-800 text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-widest font-mono">
                             👑 Built-In Superuser
@@ -2836,7 +2848,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                             </div>
                           </td>
                           <td className="py-3 px-4 font-mono text-text-main font-bold">{ad.username}</td>
-                          <td className="py-3 px-4 font-mono text-text-dim font-semibold">{ad.password}</td>
+                          <td className="py-3 px-4 font-mono text-text-dim font-semibold">••••••••</td>
                           <td className="py-3 px-4 text-center">
                             <span className="bg-bg border border-border/80 text-text-main text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-wider font-mono">
                               {ad.role === 'superadmin' ? '⭐ Super Admin' : '👤 Operator'}
