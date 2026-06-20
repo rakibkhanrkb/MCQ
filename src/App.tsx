@@ -54,10 +54,43 @@ export default function App() {
     return null;
   });
 
-  // Sync state changes with localStorage
+  // Sync state changes with localStorage safely without circular references
   useEffect(() => {
     if (studentAuth) {
-      localStorage.setItem('studentAuth', JSON.stringify(studentAuth));
+      try {
+        const seen = new WeakSet();
+        const safeString = JSON.stringify(studentAuth, (key, value) => {
+          if (value && typeof value === 'object') {
+            if (seen.has(value)) {
+              return undefined;
+            }
+            seen.add(value);
+            // If it is a Firestore Timestamp with seconds and nanoseconds, convert into a plain object to avoid circular references
+            if (value.seconds !== undefined && value.nanoseconds !== undefined) {
+              return { seconds: value.seconds, nanoseconds: value.nanoseconds };
+            }
+            if (typeof value.toDate === 'function') {
+              try {
+                const dateObj = value.toDate();
+                return { seconds: Math.floor(dateObj.getTime() / 1000), nanoseconds: 0 };
+              } catch (e) {
+                return undefined;
+              }
+            }
+          }
+          return value;
+        });
+        localStorage.setItem('studentAuth', safeString);
+      } catch (err) {
+        console.error("Failed to stringify studentAuth safely:", err);
+        try {
+          const fallbackCopy = { ...studentAuth };
+          delete (fallbackCopy as any).createdAt;
+          localStorage.setItem('studentAuth', JSON.stringify(fallbackCopy));
+        } catch (fallbackErr) {
+          console.error("Fallback stringification also failed:", fallbackErr);
+        }
+      }
     } else {
       localStorage.removeItem('studentAuth');
     }
@@ -366,7 +399,7 @@ export default function App() {
       setCurrentPage('login');
       return;
     }
-    const isPurchased = exam.price === 0 || studentAuth.purchasedExamIds?.includes(exam.id || '');
+    const isPurchased = exam.price === 0 || studentAuth.isPaidUser === true || studentAuth.purchasedExamIds?.includes(exam.id || '');
     if (!isPurchased) {
       setActiveCheckoutExam(exam);
       return;
@@ -1037,7 +1070,7 @@ export default function App() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {publishedExams.map((exam) => {
-                          const isPurchased = exam.price === 0 || studentAuth.purchasedExamIds?.includes(exam.id || '');
+                          const isPurchased = exam.price === 0 || studentAuth.isPaidUser === true || studentAuth.purchasedExamIds?.includes(exam.id || '');
                           const hasPendingPayment = !isPurchased && studentPayments.some(p => p.examId === exam.id && p.status === 'pending');
                           return (
                             <div key={exam.id} className="bg-surface border border-border/80 hover:border-accent/30 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-5 relative overflow-hidden group">

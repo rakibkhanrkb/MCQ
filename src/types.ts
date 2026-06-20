@@ -48,6 +48,7 @@ export interface UserAccount {
   email: string;
   institution: string;
   purchasedExamIds?: string[];
+  isPaidUser?: boolean;
   createdAt?: Timestamp;
 }
 

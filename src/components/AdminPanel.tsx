@@ -17,7 +17,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   const [results, setResults] = useState<any[]>([]);
   const [payments, setPayments] = useState<PaymentSlip[]>([]);
   const [routines, setRoutines] = useState<ExamRoutine[]>([]);
-  const [activeTab, setActiveTab] = useState<'exams' | 'users' | 'results' | 'payments' | 'settings' | 'routines' | 'admins' | 'logs'>('exams');
+  const [activeTab, setActiveTab] = useState<'exams' | 'users' | 'results' | 'payments' | 'settings' | 'routines' | 'admins' | 'logs' | 'paid_users'>('exams');
   const [loading, setLoading] = useState(false);
 
   // Exam Publish set duration states
@@ -38,6 +38,10 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [logQuery, setLogQuery] = useState('');
   const [logCategoryFilter, setLogCategoryFilter] = useState('All');
+
+  // Paid Student Users Directory States
+  const [paidUserSearch, setPaidUserSearch] = useState('');
+  const [paidUserFilter, setPaidUserFilter] = useState<'all' | 'full' | 'selective'>('all');
 
   const filteredLogs = activityLogs.filter(log => {
     const matchesCategory = logCategoryFilter === 'All' || log.category === logCategoryFilter;
@@ -712,6 +716,54 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     }
   };
 
+  const handleToggleFullPaidAccess = async (user: UserAccount) => {
+    if (!user.id) return;
+    setLoading(true);
+    try {
+      const nextVal = !user.isPaidUser;
+      await updateDoc(doc(db, 'users', user.id), {
+        isPaidUser: nextVal
+      });
+      await logActivity(
+        "User Permissions", 
+        `${nextVal ? 'Granted' : 'Revoked'} full premium access for user: "${user.name}"`, 
+        `Login ID: ${user.userId}`
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'write', `users/${user.id}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleSelectiveExamAccess = async (user: UserAccount, examId: string) => {
+    if (!user.id) return;
+    setLoading(true);
+    try {
+      const currentList = user.purchasedExamIds || [];
+      let updatedList: string[];
+      const isCurrentlySelected = currentList.includes(examId);
+      if (isCurrentlySelected) {
+        updatedList = currentList.filter(id => id !== examId);
+      } else {
+        updatedList = [...currentList, examId];
+      }
+      await updateDoc(doc(db, 'users', user.id), {
+        purchasedExamIds: updatedList
+      });
+      const examTitle = exams.find(e => e.id === examId)?.subject || 'Exam';
+      await logActivity(
+        "User Permissions", 
+        `${isCurrentlySelected ? 'Revoked' : 'Granted'} selective access to "${examTitle}" for user: "${user.name}"`, 
+        `Login ID: ${user.userId}, Exam ID: ${examId}`
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'write', `users/${user.id}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteResult = async (id: string) => {
     if (!confirm("Are you sure you want to delete this result?")) return;
     try {
@@ -1133,6 +1185,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         {[
           { id: 'exams', label: 'Manage MCQ Exams', count: `${publishedExamsCount} live`, icon: Layers },
           { id: 'users', label: 'Registered Students', count: `${totalStudents} profiles`, icon: Users },
+          { id: 'paid_users', label: 'Paid Users (পেইড ইউজার)', count: `${users.filter(u => u.isPaidUser === true || (u.purchasedExamIds && u.purchasedExamIds.length > 0)).length} active`, icon: Sparkles },
           { id: 'results', label: 'Exam Results', count: `${totalAssessments} records`, icon: HistoryIcon },
           { id: 'payments', label: 'BKash Ledger', count: pendingPaymentsCount > 0 ? `${pendingPaymentsCount} action pending` : 'All cleared', icon: CreditCard, alert: pendingPaymentsCount > 0 },
           { id: 'routines', label: 'Exam Routines', count: `${routines.length} items`, icon: Calendar },
@@ -2094,6 +2147,238 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* PAID USERS TAB */}
+        {activeTab === 'paid_users' && (
+          <motion.div
+            key="paid-users-tab"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-6"
+          >
+            {/* Statistics Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-surface border border-border/80 rounded-2xl p-5 shadow-sm space-y-1">
+                <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">Total Students (মোট শিক্ষার্থী)</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-text-main font-mono">{users.length}</span>
+                  <span className="text-xs text-text-dim font-bold font-sans">profiles</span>
+                </div>
+              </div>
+              <div className="bg-surface border border-border/80 border-l-4 border-l-success rounded-2xl p-5 shadow-sm space-y-1">
+                <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">Full Access Members (পূর্ণ অ্যাক্সেসধারী)</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-success font-mono">
+                    {users.filter(u => u.isPaidUser === true).length}
+                  </span>
+                  <span className="text-xs text-text-dim font-bold font-sans">All Paid Exams</span>
+                </div>
+              </div>
+              <div className="bg-surface border border-border/80 border-l-4 border-l-accent rounded-2xl p-5 shadow-sm space-y-1">
+                <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block font-sans">Selective Access Members (সিলেক্টিভ অ্যাক্সেসধারী)</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-accent font-mono">
+                    {users.filter(u => u.isPaidUser !== true && u.purchasedExamIds && u.purchasedExamIds.length > 0).length}
+                  </span>
+                  <span className="text-xs text-text-dim font-bold font-sans font-sans">Specific Exams</span>
+                </div>
+              </div>
+              <div className="bg-surface border border-border/80 border-l-4 border-l-text-dim rounded-2xl p-5 shadow-sm space-y-1 font-sans">
+                <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">No Premium Access (কোনো অ্যাক্সেস নেই)</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-text-dim font-mono">
+                    {users.filter(u => u.isPaidUser !== true && (!u.purchasedExamIds || u.purchasedExamIds.length === 0)).length}
+                  </span>
+                  <span className="text-xs text-text-dim font-bold">Unlicensed</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter and Search Panel */}
+            <div className="bg-surface border border-border/80 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                {[
+                  { id: 'all', label: 'All Students (সব শিক্ষার্থী)' },
+                  { id: 'full', label: 'Full Access (পূর্ণ পেইড মেম্বার)' },
+                  { id: 'selective', label: 'Selective Access (সিলেক্টিভ মেম্বার)' },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setPaidUserFilter(f.id as any)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      paidUserFilter === f.id
+                        ? 'bg-accent/8 border border-accent/20 text-accent font-extrabold shadow-sm'
+                        : 'text-text-dim bg-transparent hover:text-text-main hover:bg-surface-hover/80 border-transparent'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3.5 top-3 text-text-dim/80" size={14} />
+                <input
+                  type="text"
+                  value={paidUserSearch}
+                  onChange={(e) => setPaidUserSearch(e.target.value)}
+                  placeholder="Search students (নাম, আইডি বা ফোন)..."
+                  className="w-full bg-surface-hover/50 border border-border/60 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-accent text-xs font-semibold focus:bg-surface focus:ring-2 focus:ring-accent/10 transition-all font-sans"
+                />
+              </div>
+            </div>
+
+            {/* User Directory for Paid Access */}
+            <div className="bg-surface border border-border/80 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+              <div className="flex justify-between items-center border-b border-border/60 pb-4">
+                <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
+                  <Sparkles className="text-accent" size={16} />
+                  <span>Premium Access Controller / পেইড ইউজার অ্যাক্সেস কন্ট্রোলার</span>
+                </h3>
+                <span className="text-[10px] bg-accent/8 border border-accent/15 text-accent font-mono font-black py-1 px-3 rounded-md uppercase tracking-wider">
+                  {
+                    users.filter((user) => {
+                      const q = paidUserSearch.toLowerCase().trim();
+                      const matchesSearch = !q ||
+                        (user.name || '').toLowerCase().includes(q) ||
+                        (user.userId || '').toLowerCase().includes(q) ||
+                        (user.phone || '').toLowerCase().includes(q) ||
+                        (user.institution || '').toLowerCase().includes(q);
+                      if (!matchesSearch) return false;
+                      if (paidUserFilter === 'full') return user.isPaidUser === true;
+                      if (paidUserFilter === 'selective') return user.isPaidUser !== true && (user.purchasedExamIds && user.purchasedExamIds.length > 0);
+                      return true;
+                    }).length
+                  } Matches
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {users.filter((user) => {
+                  const q = paidUserSearch.toLowerCase().trim();
+                  const matchesSearch = !q ||
+                    (user.name || '').toLowerCase().includes(q) ||
+                    (user.userId || '').toLowerCase().includes(q) ||
+                    (user.phone || '').toLowerCase().includes(q) ||
+                    (user.institution || '').toLowerCase().includes(q);
+                  if (!matchesSearch) return false;
+                  if (paidUserFilter === 'full') return user.isPaidUser === true;
+                  if (paidUserFilter === 'selective') return user.isPaidUser !== true && (user.purchasedExamIds && user.purchasedExamIds.length > 0);
+                  return true;
+                }).map((user) => {
+                  const uPurchasedIds = user.purchasedExamIds || [];
+                  const userPaidExams = exams.filter(e => e.price > 0);
+
+                  return (
+                    <div key={user.id} className="bg-surface border border-border/70 hover:border-accent/30 rounded-xl p-5 hover:bg-surface-hover/10 transition-all space-y-4 group">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-base font-extrabold text-text-main">
+                              {user.name}
+                            </h4>
+                            <span className="bg-surface border border-border/80 font-mono font-bold text-[9px] px-2 py-0.5 rounded text-accent">ID: {user.userId}</span>
+                            
+                            {/* Premium Status Badge */}
+                            {user.isPaidUser === true ? (
+                              <span className="bg-success/8 border border-success/15 text-success text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider flex items-center gap-1 font-sans">
+                                <Sparkles size={9} /> Full General Access (সব পেইড এক্সাম উন্মুক্ত)
+                              </span>
+                            ) : uPurchasedIds.length > 0 ? (
+                              <span className="bg-accent/8 border border-accent/15 text-accent text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider flex items-center gap-1 font-sans">
+                                <Check size={9} /> Selective Access ({uPurchasedIds.length} exam{uPurchasedIds.length > 1 ? 's' : ''} উন্মুক্ত)
+                              </span>
+                            ) : (
+                              <span className="bg-text-dim/8 border border-border text-text-dim/80 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider font-sans">
+                                No Premium Access (কোনো পেইড এক্সাম অ্যাক্সেস নেই)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-bold text-text-dim uppercase tracking-wider">{user.institution || 'No Institution specified'} <span className="mx-1.5 opacity-40">|</span> Phone: <span className="font-mono font-semibold">{user.phone || 'N/A'}</span></p>
+                        </div>
+
+                        {/* General Access Toggle Controller */}
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => handleToggleFullPaidAccess(user)}
+                            className={`px-3 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide border transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 select-none ${
+                              user.isPaidUser 
+                                ? 'bg-success/8 hover:bg-success/15 border-success/30 text-success' 
+                                : 'bg-surface hover:bg-accent/8 border-border hover:border-accent/20 text-text-dim hover:text-accent'
+                            }`}
+                            disabled={loading}
+                          >
+                            <Sparkles size={12} className={user.isPaidUser ? 'text-success animate-pulse' : 'text-text-dim'} />
+                            <span>{user.isPaidUser ? 'পূর্ণ প্রিমিয়াম মেম্বার (এনেবলড)' : 'পূর্ণ প্রিমিয়াম মেম্বার করুন'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Selective Exam Access Panel */}
+                      <div className="bg-surface-hover/30 border border-border/50 rounded-xl p-4 space-y-2.5">
+                        <span className="text-[10px] font-black text-text-dim/90 block uppercase tracking-wider font-sans">
+                          {user.isPaidUser ? 'পূর্ণ প্রিমিয়াম মেম্বারশিপ মেথডে সকল পেইড এক্সাম উন্মুক্ত করা হয়েছে:' : 'সিলেক্টিভ পেইড এক্মাম অ্যাক্সেস দিন (টিক দিন):'}
+                        </span>
+                        {userPaidExams.length === 0 ? (
+                          <p className="text-xs text-text-dim/80 italic">কোনো পেইড এক্সাম পোর্টাল ডিরেক্টরিতে পাওয়া যায়নি।</p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {userPaidExams.map((exam) => {
+                              const examId = exam.id || '';
+                              const isPermitted = user.isPaidUser || uPurchasedIds.includes(examId);
+
+                              return (
+                                <button
+                                  key={examId}
+                                  disabled={!!user.isPaidUser || loading}
+                                  onClick={() => examId && handleToggleSelectiveExamAccess(user, examId)}
+                                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border flex items-center gap-2 cursor-pointer select-none ${
+                                    isPermitted
+                                      ? 'bg-accent/8 border-accent/20 text-accent font-bold shadow-xs'
+                                      : 'bg-transparent border-border hover:border-text-dim/40 text-text-dim hover:text-text-main'
+                                  } ${user.isPaidUser ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                >
+                                  {isPermitted ? (
+                                    <Check size={11} className="text-accent stroke-[3px]" />
+                                  ) : (
+                                    <Plus size={11} className="opacity-60" />
+                                  )}
+                                  <span>{exam.subject} ({exam.topic})</span>
+                                  <span className="text-[9px] bg-background border border-border/40 text-text-dim px-1 rounded-sm">৳{exam.price}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {users.filter((user) => {
+                  const q = paidUserSearch.toLowerCase().trim();
+                  const matchesSearch = !q ||
+                    (user.name || '').toLowerCase().includes(q) ||
+                    (user.userId || '').toLowerCase().includes(q) ||
+                    (user.phone || '').toLowerCase().includes(q) ||
+                    (user.institution || '').toLowerCase().includes(q);
+                  if (!matchesSearch) return false;
+                  if (paidUserFilter === 'full') return user.isPaidUser === true;
+                  if (paidUserFilter === 'selective') return user.isPaidUser !== true && (user.purchasedExamIds && user.purchasedExamIds.length > 0);
+                  return true;
+                }).length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 border border-dashed border-border rounded-xl text-text-dim text-center bg-surface-hover/20">
+                    <Users size={32} className="opacity-15 mb-3" />
+                    <p className="font-extrabold uppercase text-[11px] tracking-wider text-text-main">No Match Found</p>
+                    <p className="text-xs max-w-xs mt-1 text-text-dim/80 text-sans">Try modifying your search text queries or state filters.</p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
