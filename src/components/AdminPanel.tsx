@@ -83,6 +83,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     logoText: 'ICT MCQ',
     logoUrl: '',
     heroImageUrl: '',
+    paidExamNotice: '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
   });
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
           logoText: data.logoText || 'ICT MCQ',
           logoUrl: data.logoUrl || '',
           heroImageUrl: data.heroImageUrl || '',
+          paidExamNotice: data.paidExamNotice || '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
         });
       }
     });
@@ -130,6 +132,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         logoText: logoSettings.logoText.trim(),
         logoUrl: logoSettings.logoUrl.trim(),
         heroImageUrl: (logoSettings.heroImageUrl || '').trim(),
+        paidExamNotice: (logoSettings.paidExamNotice || '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)').trim(),
       });
       await logActivity("Settings", "Updated portal branding and logo configuration", `Logo Text: ${logoSettings.logoText.trim()}`);
       alert("Portal Logo Brand configuration has been successfully updated!");
@@ -140,6 +143,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
           logoText: logoSettings.logoText.trim(),
           logoUrl: logoSettings.logoUrl.trim(),
           heroImageUrl: (logoSettings.heroImageUrl || '').trim(),
+          paidExamNotice: (logoSettings.paidExamNotice || '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)').trim(),
         });
         await logActivity("Settings", "Created and updated portal branding and logo configuration", `Logo Text: ${logoSettings.logoText.trim()}`);
         alert("Portal Logo Brand configuration created and updated!");
@@ -2690,6 +2694,27 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                     </div>
                     <p className="text-[10px] text-text-dim italic">
                       Upload any PNG, JPG, or SVG image. Image file is automatically compiled into an elegant standalone database base64 format.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Paid Exam Notice Section */}
+                <div className="space-y-3 border-t border-border/40 pt-6">
+                  <h4 className="text-[11px] font-black uppercase text-accent tracking-widest">
+                    💳 Paid Exam Notice Headline (পেইড এক্সাম নোটিশ হেডার)
+                  </h4>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-extrabold text-text-dim uppercase tracking-wider block">Paid Exam Section Title / Notice (পেইড এক্সাম সেকশনের নোটিশ)</label>
+                    <input
+                      type="text"
+                      required
+                      value={logoSettings.paidExamNotice || ''}
+                      onChange={(e) => setLogoSettings({ ...logoSettings, paidExamNotice: e.target.value })}
+                      placeholder="যেমন: ৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)"
+                      className="w-full bg-surface-hover/50 border border-border/80 rounded-xl p-3 h-11 outline-none text-xs font-semibold transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 focus:bg-surface"
+                    />
+                    <p className="text-[10px] text-text-dim leading-relaxed">
+                      পেইড এক্সাম লিস্টের উপরে এই লেখাটি বড় করে হাইলাইট নোটিশ আকারে প্রদর্শন করা হবে। এডমিন যেকোনো সময় এটি আপডেট করতে পারবেন।
                     </p>
                   </div>
                 </div>

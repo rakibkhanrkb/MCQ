@@ -40,7 +40,7 @@ export default function App() {
   });
   const [routines, setRoutines] = useState<ExamRoutine[]>([]);
   const [loading, setLoading] = useState(true);
-  const [studentAuth, setStudentAuth] = useState<UserAccount | null>(() => {
+  const [studentAuth, setStudentAuthRaw] = useState<UserAccount | null>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('studentAuth');
       if (saved) {
@@ -54,32 +54,55 @@ export default function App() {
     return null;
   });
 
+  // Safe wrapper to prevent circular references and complex structures from storing in state
+  const setStudentAuth = (user: UserAccount | null) => {
+    if (!user) {
+      setStudentAuthRaw(null);
+      return;
+    }
+    const sanitized: any = {};
+    if (user.id) sanitized.id = String(user.id);
+    if (user.userId) sanitized.userId = String(user.userId);
+    if (user.name) sanitized.name = String(user.name);
+    if (user.phone) sanitized.phone = String(user.phone);
+    if (user.email) sanitized.email = String(user.email);
+    if (user.institution) sanitized.institution = String(user.institution);
+    if (user.password !== undefined) sanitized.password = String(user.password);
+    if (user.isPaidUser !== undefined) sanitized.isPaidUser = Boolean(user.isPaidUser);
+    
+    if (Array.isArray(user.purchasedExamIds)) {
+      sanitized.purchasedExamIds = user.purchasedExamIds.map((id: any) => String(id));
+    } else {
+      sanitized.purchasedExamIds = [];
+    }
+
+    if (user.createdAt) {
+      if (typeof user.createdAt.toDate === 'function') {
+        try {
+          const d = user.createdAt.toDate();
+          sanitized.createdAt = { seconds: Math.floor(d.getTime() / 1000), nanoseconds: 0 };
+        } catch (e) {
+          sanitized.createdAt = null;
+        }
+      } else if (typeof user.createdAt === 'object' && user.createdAt !== null) {
+        const sec = (user.createdAt as any).seconds !== undefined ? Number((user.createdAt as any).seconds) : Math.floor(Date.now() / 1000);
+        const nano = (user.createdAt as any).nanoseconds !== undefined ? Number((user.createdAt as any).nanoseconds) : 0;
+        sanitized.createdAt = { seconds: sec, nanoseconds: nano };
+      } else {
+        sanitized.createdAt = { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 };
+      }
+    } else {
+      sanitized.createdAt = { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 };
+    }
+    
+    setStudentAuthRaw(sanitized as UserAccount);
+  };
+
   // Sync state changes with localStorage safely without circular references
   useEffect(() => {
     if (studentAuth) {
       try {
-        const seen = new WeakSet();
-        const safeString = JSON.stringify(studentAuth, (key, value) => {
-          if (value && typeof value === 'object') {
-            if (seen.has(value)) {
-              return undefined;
-            }
-            seen.add(value);
-            // If it is a Firestore Timestamp with seconds and nanoseconds, convert into a plain object to avoid circular references
-            if (value.seconds !== undefined && value.nanoseconds !== undefined) {
-              return { seconds: value.seconds, nanoseconds: value.nanoseconds };
-            }
-            if (typeof value.toDate === 'function') {
-              try {
-                const dateObj = value.toDate();
-                return { seconds: Math.floor(dateObj.getTime() / 1000), nanoseconds: 0 };
-              } catch (e) {
-                return undefined;
-              }
-            }
-          }
-          return value;
-        });
+        const safeString = JSON.stringify(studentAuth);
         localStorage.setItem('studentAuth', safeString);
       } catch (err) {
         console.error("Failed to stringify studentAuth safely:", err);
@@ -171,6 +194,7 @@ export default function App() {
     logoText: 'ICT MCQ TEST',
     logoUrl: '',
     heroImageUrl: '',
+    paidExamNotice: '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
   });
 
   const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(() => {
@@ -256,6 +280,7 @@ export default function App() {
           logoText: data.logoText || 'ICT MCQ',
           logoUrl: data.logoUrl || '',
           heroImageUrl: data.heroImageUrl || '',
+          paidExamNotice: data.paidExamNotice || '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
         });
       }
     }, (err) => {
@@ -1058,98 +1083,201 @@ export default function App() {
                     </div>
 
                     {/* SUBJECT AND TOPIC-WISE EXAMS GRID */}
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold tracking-tight text-text-main flex items-center gap-2.5">
-                          <BookOpen className="text-accent" size={18} /> DISPATCHED MCQ EXAMS
-                        </h2>
-                        <span className="bg-accent/8 border border-accent/15 text-accent font-bold text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider">
-                          {publishedExams.length} Available
-                        </span>
+                    <div className="space-y-12">
+                      {/* FREE EXAMS SECTION */}
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                          <h2 className="text-xl font-black tracking-tight text-text-main flex items-center gap-2.5">
+                            <BookOpen className="text-success" size={20} /> 
+                            <span>ফ্রি লাইভ পরীক্ষা (Free MCQ Exams)</span>
+                          </h2>
+                          <span className="bg-success/8 border border-success/15 text-success font-black text-[10px] px-3.5 py-1.5 rounded-full uppercase tracking-wider font-mono">
+                            {publishedExams.filter(e => e.price === 0).length} Available
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {publishedExams.filter(e => e.price === 0).map((exam) => {
+                            const isPurchased = true;
+                            const hasPendingPayment = false;
+                            return (
+                              <div key={exam.id} className="bg-surface border border-border/80 hover:border-accent/30 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-5 relative overflow-hidden group">
+                                <div className="space-y-3.5">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="bg-success/8 border border-success/15 text-success text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider">Free Access</span>
+                                    <span className="bg-success/8 border border-success/15 text-success text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1">
+                                      <CheckCircle size={10} /> Unlocked (উন্মুক্ত)
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-accent transition-colors leading-snug">
+                                      {exam.subject}
+                                    </h3>
+                                    <p className="text-xs text-text-dim/90 font-medium">Topic: {exam.topic || 'Subject-wise MCQ assessment'}</p>
+                                  </div>
+
+                                  <div className="flex items-center gap-4 bg-surface-hover/60 border border-border/40 p-3.5 rounded-xl text-xs font-medium">
+                                    <div className="flex items-center gap-2 text-text-dim">
+                                      <Tag size={14} className="text-accent" />
+                                      <span>Total: <strong className="text-text-main font-semibold font-mono">{exam.questions?.length || 0} MCQs</strong></span>
+                                    </div>
+                                    <span className="text-border/80">|</span>
+                                    <div className="flex items-center gap-1.5 text-text-dim">
+                                      <Clock size={14} className="text-accent" />
+                                      <span>Timer: <strong className="text-text-main font-semibold font-mono">{exam.timeLimit || 30} mins</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50 mt-auto">
+                                  <div>
+                                    <p className="text-[9px] font-bold uppercase text-text-dim/70 leading-none mb-1">Registration Charge</p>
+                                    <h4 className="text-xl font-bold font-mono text-text-main">
+                                      <span className="text-success text-[14px] font-bold uppercase">Free / সম্পূর্ণ ফ্রি</span>
+                                    </h4>
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleLaunchExam(exam)}
+                                    className="px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 bg-accent hover:bg-accent2 text-white"
+                                  >
+                                    Participate <ChevronRight size={13} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {publishedExams.filter(e => e.price === 0).length === 0 && (
+                            <div className="col-span-full py-12 text-center text-text-dim border border-dashed border-border/80 rounded-3xl bg-surface/50">
+                              <BookOpen size={36} className="opacity-15 mx-auto mb-2" />
+                              <p className="font-bold text-xs uppercase tracking-wider text-text-main">No Free Exams</p>
+                              <p className="text-xs italic max-w-xs mx-auto mt-1">বর্তমানে কোনো ফ্রি পরীক্ষা অ্যাভেলেবল নেই।</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {publishedExams.map((exam) => {
-                          const isPurchased = exam.price === 0 || studentAuth.isPaidUser === true || studentAuth.purchasedExamIds?.includes(exam.id || '');
-                          const hasPendingPayment = !isPurchased && studentPayments.some(p => p.examId === exam.id && p.status === 'pending');
-                          return (
-                            <div key={exam.id} className="bg-surface border border-border/80 hover:border-accent/30 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-5 relative overflow-hidden group">
-                              <div className="space-y-3.5">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="bg-accent/8 border border-accent/15 text-accent text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider">MCQ Exam</span>
-                                  {isPurchased ? (
-                                    <span className="bg-success/8 border border-success/15 text-success text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1">
-                                      <CheckCircle size={10} /> Purchased
-                                    </span>
-                                  ) : hasPendingPayment ? (
-                                    <span className="bg-amber-500/8 border border-amber-500/15 text-amber-700 text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1">
-                                      <Clock size={10} className="animate-spin text-amber-500" /> Pending Approval / পেন্ডিং
-                                    </span>
-                                  ) : (
-                                    <span className="bg-warning/8 border border-warning/15 text-warning text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider">
-                                      Not Purchased
-                                    </span>
-                                  )}
-                                </div>
+                      {/* PREMIUM/PAID EXAMS SECTION */}
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                          <h2 className="text-xl font-black tracking-tight text-text-main flex items-center gap-2.5">
+                            <Sparkles className="text-amber-500" size={20} /> 
+                            <span>পেইড লাইভ পরীক্ষা (Premium Paid MCQ Exams)</span>
+                          </h2>
+                          <span className="bg-amber-500/8 border border-amber-500/15 text-amber-600 font-black text-[10px] px-3.5 py-1.5 rounded-full uppercase tracking-wider font-mono">
+                            {publishedExams.filter(e => e.price > 0).length} Premium Live
+                          </span>
+                        </div>
 
-                                <div className="space-y-1">
-                                  <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-accent transition-colors leading-snug">
-                                    {exam.subject}
-                                  </h3>
-                                  <p className="text-xs text-text-dim/90 font-medium">Topic: {exam.topic || 'Subject-wise MCQ assessment'}</p>
-                                </div>
-
-                                <div className="flex items-center gap-4 bg-surface-hover/60 border border-border/40 p-3.5 rounded-xl text-xs font-medium">
-                                  <div className="flex items-center gap-2 text-text-dim">
-                                    <Tag size={14} className="text-accent" />
-                                    <span>Total: <strong className="text-text-main font-semibold font-mono">{exam.questions?.length || 0} MCQs</strong></span>
-                                  </div>
-                                  <span className="text-border/80">|</span>
-                                  <div className="flex items-center gap-1.5 text-text-dim">
-                                    <Clock size={14} className="text-accent" />
-                                    <span>Timer: <strong className="text-text-main font-semibold font-mono">{exam.timeLimit || 30} mins</strong></span>
-                                  </div>
-                                </div>
+                        {/* Top Highlights Notice Banner (পেইড এক্সাম নোটিশ) */}
+                        {logoSettings.paidExamNotice && (
+                          <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/12 via-accent/12 to-amber-500/12 border border-amber-500/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full" />
+                            <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-accent/20 blur-2xl rounded-full" />
+                            <div className="flex items-center gap-4 relative z-10">
+                              <div className="hidden sm:flex bg-gradient-to-tr from-amber-500 to-amber-600 p-3.5 rounded-2xl text-white shadow-md animate-bounce">
+                                <Sparkles size={24} />
                               </div>
-
-                              <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50 mt-auto">
-                                <div>
-                                  <p className="text-[9px] font-bold uppercase text-text-dim/70 leading-none mb-1">Registration Charge</p>
-                                  <h4 className="text-xl font-bold font-mono text-text-main">
-                                    {exam.price === 0 ? <span className="text-success text-[13px] font-bold uppercase">Free / ফ্রি</span> : `৳${exam.price} BDT`}
-                                  </h4>
-                                </div>
-
-                                <button
-                                  onClick={() => {
-                                    if (hasPendingPayment) {
-                                      alert("আপনার পেমেন্ট রিকোয়েস্ট ইতিমধ্যে সাবমিট করা হয়েছে। অ্যাডমিন চেক করে অ্যাপ্রুভ করলে পরীক্ষাটি দিতে পারবেন।");
-                                      return;
-                                    }
-                                    handleLaunchExam(exam);
-                                  }}
-                                  className={`px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 ${isPurchased ? 'bg-accent hover:bg-accent2 text-white' : hasPendingPayment ? 'bg-[#b3135b]/10 text-[#b3135b] border border-[#b3135b]/15 opacity-80 cursor-not-allowed' : 'bg-[#b3135b] hover:bg-[#a01052] text-white'}`}
-                                >
-                                  {isPurchased ? (
-                                    <>Participate <ChevronRight size={13} /></>
-                                  ) : hasPendingPayment ? (
-                                    <>Pending <Clock size={12} className="animate-pulse" /></>
-                                  ) : (
-                                    <>Pay & Unlock ৳</>
-                                  )}
-                                </button>
+                              <div className="space-y-1.5">
+                                <span className="bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-500 text-[9px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider inline-block">OFFICIAL NOTICE / পেইড এক্সাম অফার</span>
+                                <h3 className="text-lg md:text-2xl font-black text-text-main leading-tight font-sans tracking-wide">
+                                  {logoSettings.paidExamNotice}
+                                </h3>
                               </div>
                             </div>
-                          );
-                        })}
-
-                        {publishedExams.length === 0 && (
-                          <div className="col-span-full py-20 text-center text-text-dim border border-dashed border-border/80 rounded-3xl bg-surface/50">
-                            <BookOpen size={48} className="opacity-20 mx-auto mb-3" />
-                            <p className="font-bold text-sm uppercase tracking-wider text-text-main">No Exams Available</p>
-                            <p className="text-xs italic max-w-xs mx-auto mt-1">Administrator has not published any subject exams yet.</p>
+                            <div className="relative z-10 shrink-0">
+                              <span className="bg-amber-500/15 border border-amber-500/25 text-amber-700 dark:text-amber-500 font-black text-[10px] px-4 py-2 rounded-xl uppercase tracking-wider block text-center min-w-[120px] shadow-sm">
+                                Limited Offer
+                              </span>
+                            </div>
                           </div>
                         )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {publishedExams.filter(e => e.price > 0).map((exam) => {
+                            const isPurchased = studentAuth.isPaidUser === true || studentAuth.purchasedExamIds?.includes(exam.id || '');
+                            const hasPendingPayment = !isPurchased && studentPayments.some(p => p.examId === exam.id && p.status === 'pending');
+                            return (
+                              <div key={exam.id} className="bg-surface border border-border/80 hover:border-accent/30 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-5 relative overflow-hidden group">
+                                <div className="space-y-3.5">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="bg-accent/8 border border-accent/15 text-accent text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider">Premium MCQ Exam</span>
+                                    {isPurchased ? (
+                                      <span className="bg-success/8 border border-success/15 text-success text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1">
+                                        <CheckCircle size={10} /> Purchased (সংযুক্ত)
+                                      </span>
+                                    ) : hasPendingPayment ? (
+                                      <span className="bg-amber-500/8 border border-amber-500/15 text-amber-700 text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1">
+                                        <Clock size={10} className="animate-spin text-amber-500" /> Pending Approval / পেন্ডিং
+                                      </span>
+                                    ) : (
+                                      <span className="bg-warning/8 border border-warning/15 text-warning text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-md tracking-wider">
+                                        Premium Lock / লক করা
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <h3 className="text-xl font-bold tracking-tight text-text-main group-hover:text-accent transition-colors leading-snug">
+                                      {exam.subject}
+                                    </h3>
+                                    <p className="text-xs text-text-dim/90 font-medium">Topic: {exam.topic || 'Subject-wise MCQ assessment'}</p>
+                                  </div>
+
+                                  <div className="flex items-center gap-4 bg-surface-hover/60 border border-border/40 p-3.5 rounded-xl text-xs font-medium">
+                                    <div className="flex items-center gap-2 text-text-dim">
+                                      <Tag size={14} className="text-accent" />
+                                      <span>Total: <strong className="text-text-main font-semibold font-mono">{exam.questions?.length || 0} MCQs</strong></span>
+                                    </div>
+                                    <span className="text-border/80">|</span>
+                                    <div className="flex items-center gap-1.5 text-text-dim">
+                                      <Clock size={14} className="text-accent" />
+                                      <span>Timer: <strong className="text-text-main font-semibold font-mono">{exam.timeLimit || 30} mins</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/50 mt-auto">
+                                  <div>
+                                    <p className="text-[9px] font-bold uppercase text-text-dim/70 leading-none mb-1">Registration Charge</p>
+                                    <h4 className="text-xl font-bold font-mono text-text-main">
+                                      ৳{exam.price} BDT
+                                    </h4>
+                                  </div>
+
+                                  <button
+                                    onClick={() => {
+                                      if (hasPendingPayment) {
+                                        alert("আপনার পেমেন্ট রিকোয়েস্ট ইতিমধ্যে সাবমিট করা হয়েছে। অ্যাডমিন চেক করে অ্যাপ্রুভ করলে পরীক্ষাটি দিতে পারবেন।");
+                                        return;
+                                      }
+                                      handleLaunchExam(exam);
+                                    }}
+                                    className={`px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 ${isPurchased ? 'bg-accent hover:bg-accent2 text-white' : hasPendingPayment ? 'bg-[#b3135b]/10 text-[#b3135b] border border-[#b3135b]/15 opacity-80 cursor-not-allowed' : 'bg-[#b3135b] hover:bg-[#a01052] text-white'}`}
+                                  >
+                                    {isPurchased ? (
+                                      <>Participate <ChevronRight size={13} /></>
+                                    ) : hasPendingPayment ? (
+                                      <>Pending <Clock size={12} className="animate-pulse" /></>
+                                    ) : (
+                                      <>Pay & Unlock ৳</>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {publishedExams.filter(e => e.price > 0).length === 0 && (
+                            <div className="col-span-full py-12 text-center text-text-dim border border-dashed border-border/80 rounded-3xl bg-surface/50">
+                              <Sparkles size={36} className="opacity-15 mx-auto mb-2 text-amber-500" />
+                              <p className="font-bold text-xs uppercase tracking-wider text-text-main">No Premium Exams Available</p>
+                              <p className="text-xs italic max-w-xs mx-auto mt-1">সব প্রিমিয়াম পরীক্ষাগুলো পরবর্তীতে চালু করা হবে।</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </>
