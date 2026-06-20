@@ -3,6 +3,7 @@ import { onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPo
 import { collection, onSnapshot, query, orderBy, limit, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 import { Question, Exam, ExamResult, Page, UserAccount, PaymentSlip, ExamRoutine } from './types';
+import { safeJsonStringify } from './lib/safe-stringify';
 import Navbar from './components/Navbar';
 import AdminPanel from './components/AdminPanel';
 import ExamEngine from './components/ExamEngine';
@@ -102,14 +103,14 @@ export default function App() {
   useEffect(() => {
     if (studentAuth) {
       try {
-        const safeString = JSON.stringify(studentAuth);
+        const safeString = safeJsonStringify(studentAuth);
         localStorage.setItem('studentAuth', safeString);
       } catch (err) {
         console.error("Failed to stringify studentAuth safely:", err);
         try {
           const fallbackCopy = { ...studentAuth };
           delete (fallbackCopy as any).createdAt;
-          localStorage.setItem('studentAuth', JSON.stringify(fallbackCopy));
+          localStorage.setItem('studentAuth', safeJsonStringify(fallbackCopy));
         } catch (fallbackErr) {
           console.error("Fallback stringification also failed:", fallbackErr);
         }

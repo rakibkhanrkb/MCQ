@@ -1,5 +1,6 @@
 import { auth } from './firebase';
 import { FirestoreErrorInfo } from '../types';
+import { safeJsonStringify } from './safe-stringify';
 
 export function handleFirestoreError(error: any, operationType: FirestoreErrorInfo['operationType'], path: string | null = null): never {
   const user = auth.currentUser;
@@ -22,5 +23,5 @@ export function handleFirestoreError(error: any, operationType: FirestoreErrorIn
   };
 
   console.error("Firestore Error:", errorInfo);
-  throw new Error(JSON.stringify(errorInfo));
+  throw new Error(safeJsonStringify(errorInfo));
 }
