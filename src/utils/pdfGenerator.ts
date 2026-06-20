@@ -85,7 +85,7 @@ export const downloadResultPDF = (
   doc.setFont('helvetica', 'bold');
   doc.text(result.studentName.toUpperCase(), 52, 50);
   doc.text(result.studentId || 'STUDENT_PORTAL_REGISTERED', 52, 56);
-  doc.text('ICT DIGITAL EDUCATION PORTAL', 52, 62);
+  doc.text('bitBox Team', 52, 62);
 
   // Center division vertical rule
   doc.setDrawColor(241, 245, 249);

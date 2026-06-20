@@ -86,6 +86,111 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     paidExamNotice: '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
   });
 
+  // Export & Filtering states
+  const [selectedExamResultFilter, setSelectedExamResultFilter] = useState<string>('all');
+
+  const filteredResults = selectedExamResultFilter === 'all'
+    ? results
+    : results.filter(r => (r.examTitle || 'Global MCQ Bank') === selectedExamResultFilter);
+
+  const exportAllStudentsToExcel = () => {
+    const headers = [
+      'Student Name',
+      'Login ID',
+      'Passcode',
+      'Institution',
+      'Phone No',
+      'Email Address',
+      'Purchased Exam Count',
+      'Has Full Access (isPaidUser)'
+    ];
+
+    const rows = users.map(user => [
+      user.name || '',
+      user.userId || '',
+      user.password || '',
+      user.institution || '',
+      user.phone || '',
+      user.email || '',
+      user.purchasedExamIds?.length || 0,
+      user.isPaidUser ? 'YES' : 'NO'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(val => {
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        }).join(',')
+      )
+    ].join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `All_Students_List_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    logActivity("Export", "Downloaded registered students database list as Excel/CSV");
+  };
+
+  const exportResultsToExcel = () => {
+    const headers = [
+      'Timestamp',
+      'Student Name',
+      'Student ID',
+      'Exam Title',
+      'Obtained Score',
+      'Total Marks',
+      'Percentage (%)'
+    ];
+
+    const rows = filteredResults.map(res => {
+      const dateStr = res.timestamp?.seconds 
+        ? new Date(res.timestamp.seconds * 1000).toLocaleString() 
+        : 'N/A';
+      return [
+        dateStr,
+        res.studentName || 'Anonymous',
+        res.studentId || 'anonymous',
+        res.examTitle || 'Global MCQ Bank',
+        res.score || 0,
+        res.total || 0,
+        res.percentage ? String(res.percentage).replace('%', '') : '0'
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(val => {
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        }).join(',')
+      )
+    ].join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const fileLabel = selectedExamResultFilter === 'all' 
+      ? 'All_Students_Exam_Results'
+      : `${selectedExamResultFilter.replace(/\s+/g, '_')}_Results`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${fileLabel}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    logActivity("Export", `Downloaded exam results list as Excel/CSV (Filter: ${selectedExamResultFilter})`);
+  };
+
   useEffect(() => {
     const unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
       if (docSnap.exists()) {
@@ -98,6 +203,8 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
           paidExamNotice: data.paidExamNotice || '৫০ টাকায় সারামাস পেইড এক্সাম (২০ টি)',
         });
       }
+    }, (error) => {
+      console.warn("Branding settings snapshot reading warning:", error.message);
     });
 
     // Realtime subscription to exam routines (Manual client-side sort to avoid index errors)
@@ -319,13 +426,13 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     const examsQuery = query(collection(db, 'exams'), orderBy('createdAt', 'desc'));
     const unsubscribeExams = onSnapshot(examsQuery, (snapshot) => {
       setExams(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Exam)));
-    }, error => handleFirestoreError(error, 'list', 'exams'));
+    }, error => console.warn("Exams snapshot reading error:", error.message));
 
     // Read Users (Students)
     const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       setUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserAccount)));
-    }, error => handleFirestoreError(error, 'list', 'users'));
+    }, error => console.warn("Users snapshot reading error:", error.message));
 
     // Read Results
     const resultsQuery = query(collection(db, 'exam_results'), limit(500));
@@ -337,7 +444,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         return tB - tA;
       });
       setResults(sorted);
-    }, error => handleFirestoreError(error, 'list', 'exam_results'));
+    }, error => console.warn("Results snapshot reading error:", error.message));
 
     // Read Payments ledger
     const paymentsQuery = query(collection(db, 'payments'), limit(500));
@@ -349,14 +456,14 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         return tB - tA;
       });
       setPayments(sorted);
-    }, error => handleFirestoreError(error, 'list', 'payments'));
+    }, error => console.warn("Payments snapshot reading error:", error.message));
 
     // Read Admins
     const adminsQuery = query(collection(db, 'admins'));
     const unsubscribeAdmins = onSnapshot(adminsQuery, (snapshot) => {
       setAdminsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AdminAccount)));
     }, error => {
-      console.warn("Admins reading error:", error);
+      console.warn("Admins reading error:", error.message);
     });
 
     // Read Activity Logs
@@ -370,7 +477,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       });
       setActivityLogs(sorted);
     }, error => {
-      console.warn("Activity logs reading error:", error);
+      console.warn("Activity logs reading error:", error.message);
     });
 
     return () => {
@@ -2081,14 +2188,24 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
             {/* Student Database Inventory */}
             <div className="lg:col-span-8 space-y-4">
               <div className="bg-surface border border-border/80 rounded-2xl p-6 md:p-8 shadow-sm md:min-h-[600px] flex flex-col">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
                     <Users className="text-accent" size={16} /> 
                     <span>Registered Student Directory</span>
                   </h3>
-                  <span className="bg-accent/8 border border-accent/15 text-accent font-mono font-bold text-[10px] py-1 px-3 rounded-md uppercase tracking-wider">
-                    {users.length} Active Profiles
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={exportAllStudentsToExcel}
+                      className="flex items-center gap-1.5 bg-accent/8 hover:bg-accent/15 border border-accent/30 text-accent font-bold text-[10px] py-1.5 px-3 rounded-xl uppercase tracking-wider cursor-pointer transition-all"
+                      title="Download complete registered student list as an Excel/CSV file"
+                    >
+                      <Download size={12} className="text-accent" />
+                      <span>Export All Students</span>
+                    </button>
+                    <span className="bg-accent/8 border border-accent/15 text-accent font-mono font-bold text-[10px] py-1.5 px-3 rounded-xl uppercase tracking-wider">
+                      {users.length} Active Profiles
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -2397,14 +2514,47 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
             exit={{ opacity: 0, y: -15 }}
             className="bg-surface border border-border/80 rounded-2xl p-6 md:p-8 shadow-sm min-h-[500px]"
           >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
-                <HistoryIcon className="text-accent" size={16} />
-                <span>Historical Exam Dispatch Ledger</span>
-              </h3>
-              <span className="bg-accent/8 border border-accent/15 text-accent px-3 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider">
-                {results.length} Sessions Resolved
-              </span>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6 border-b border-border/40 pb-6">
+              <div>
+                <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
+                  <HistoryIcon className="text-accent" size={16} />
+                  <span>Historical Exam Dispatch Ledger</span>
+                </h3>
+                <p className="text-[10px] text-text-dim uppercase font-extrabold tracking-wider mt-1">
+                  View and export registered examwise performance records
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Examwise Selector Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold text-text-dim uppercase tracking-wider">Exam:</span>
+                  <select
+                    value={selectedExamResultFilter}
+                    onChange={(e) => setSelectedExamResultFilter(e.target.value)}
+                    className="bg-surface-hover border border-border/80 rounded-xl px-3 py-1.5 outline-none focus:border-accent text-xs font-bold text-text-main focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer min-w-[200px] max-w-[300px]"
+                  >
+                    <option value="all">All Exams</option>
+                    {Array.from(new Set(results.map(r => r.examTitle || 'Global MCQ Bank'))).map((title, idx) => (
+                      <option key={idx} value={title}>{title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Export Button */}
+                <button
+                  onClick={exportResultsToExcel}
+                  className="flex items-center gap-1.5 bg-accent hover:bg-accent2 text-white font-extrabold text-[10px] py-2 px-3.5 rounded-xl uppercase tracking-wider cursor-pointer transition-all"
+                  title="Download student results of selected exam as Excel/CSV format"
+                >
+                  <Download size={12} />
+                  <span>Export Results</span>
+                </button>
+
+                <span className="bg-accent/8 border border-accent/15 text-accent px-3 py-2 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider">
+                  {filteredResults.length} Sessions Resolved
+                </span>
+              </div>
             </div>
 
             <div className="overflow-x-auto border border-border/60 rounded-xl">
@@ -2420,7 +2570,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {results.map((res) => (
+                  {filteredResults.map((res) => (
                     <tr key={res.id} className="hover:bg-surface-hover/40 transition-colors text-xs text-text-main">
                       <td className="py-4 px-5 font-mono text-text-dim text-[11px]">
                         {res.timestamp?.seconds ? new Date(res.timestamp.seconds * 1000).toLocaleString() : 'N/A'}
@@ -2450,10 +2600,10 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                       </td>
                     </tr>
                   ))}
-                  {results.length === 0 && (
+                  {filteredResults.length === 0 && (
                     <tr>
                       <td colSpan={6} className="py-16 text-center text-text-dim font-bold uppercase text-[11px] tracking-wider bg-surface-hover/20">
-                        No examination records found in history ledger
+                        No examination records found in filtered view
                       </td>
                     </tr>
                   )}

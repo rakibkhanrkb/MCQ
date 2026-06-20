@@ -332,6 +332,8 @@ export default function App() {
       if (docSnap.exists()) {
         setStudentAuth({ id: docSnap.id, ...docSnap.data() } as UserAccount);
       }
+    }, (err) => {
+      console.warn("User profile background sync warning:", err.message);
     });
     return () => unsubUser();
   }, [studentAuth?.id]);
@@ -388,6 +390,8 @@ export default function App() {
     );
     const unsubPay = onSnapshot(qPayments, (snap) => {
       setStudentPayments(snap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentSlip)));
+    }, (err) => {
+      console.warn("Student payments background sync warning:", err.message);
     });
     return () => unsubPay();
   }, [studentAuth?.userId]);
@@ -414,6 +418,8 @@ export default function App() {
         return timeB - timeA;
       });
       setHistory(sortedData);
+    }, (err) => {
+      console.warn("Student history background sync warning:", err.message);
     });
 
     return () => unsubH();
