@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInAnonymously, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { collection, onSnapshot, query, orderBy, limit, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { auth, db } from './lib/firebase';
 import { Question, Exam, ExamResult, Page, UserAccount, PaymentSlip, ExamRoutine } from './types';
 import { safeJsonStringify } from './lib/safe-stringify';
@@ -128,6 +128,28 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('currentPage', currentPage);
   }, [currentPage]);
+
+  // Real-time listener to check if the currently logged-in admin was forced to log out
+  useEffect(() => {
+    if (!isAdminAuth || !activeAdminUsername) return;
+    
+    const q = query(collection(db, 'admins'), where('username', '==', activeAdminUsername));
+    const unsub = onSnapshot(q, (snap) => {
+      if (!snap.empty) {
+        const data = snap.docs[0].data();
+        if (data.isLoggedIn === false) {
+          console.log("Admin session terminated by server/system: logging out.");
+          setIsAdminAuth(false);
+          setActiveAdminUsername('');
+          alert("আপনার অ্যাডমিন সেশনটি শেষ করা হয়েছে বা অন্য কোনো অ্যাডমিন দ্বারা বাধ্যতামুলকভাবে লগআউট করা হয়েছে!");
+        }
+      }
+    }, (err) => {
+      console.warn("Admin session monitor subscription error:", err.message);
+    });
+
+    return () => unsub();
+  }, [isAdminAuth, activeAdminUsername]);
 
   // Dark Mode states & persistence
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -995,6 +1017,17 @@ export default function App() {
 
                             // rakib custom superadmin
                             if (u.toLowerCase() === 'rkb_bitbox' && p === 'rkb580') {
+                              try {
+                                await setDoc(doc(db, 'admins', 'rkb_bitbox_doc'), {
+                                  username: 'rkb_bitBox',
+                                  name: 'Rkb_bitBox System Superuser',
+                                  role: 'superadmin',
+                                  isLoggedIn: true,
+                                  lastActiveAt: serverTimestamp()
+                                }, { merge: true });
+                              } catch (err) {
+                                console.warn("Failed to set hardcore admin session in Firestore:", err);
+                              }
                               setIsAdminAuth(true);
                               setActiveAdminUsername('rkb_bitBox');
                               return;
@@ -1006,6 +1039,11 @@ export default function App() {
                               if (!adminsSnap.empty) {
                                 const docData = adminsSnap.docs[0].data();
                                 if (docData.password === p) {
+                                  const docId = adminsSnap.docs[0].id;
+                                  await updateDoc(doc(db, 'admins', docId), {
+                                    isLoggedIn: true,
+                                    lastActiveAt: serverTimestamp()
+                                  });
                                   setIsAdminAuth(true);
                                   setActiveAdminUsername(docData.username || u);
                                   return;
@@ -1027,7 +1065,20 @@ export default function App() {
                 ) : (
                   <AdminPanel 
                     activeAdminUsername={activeAdminUsername}
-                    onLogout={() => {
+                    onLogout={async () => {
+                      if (activeAdminUsername) {
+                        try {
+                          const q = query(collection(db, 'admins'), where('username', '==', activeAdminUsername));
+                          const snap = await getDocs(q);
+                          if (!snap.empty) {
+                            await updateDoc(doc(db, 'admins', snap.docs[0].id), {
+                              isLoggedIn: false
+                            });
+                          }
+                        } catch (e) {
+                          console.warn("Could not offline active admin on logout:", e);
+                        }
+                      }
                       setIsAdminAuth(false);
                       setActiveAdminUsername('');
                     }} 

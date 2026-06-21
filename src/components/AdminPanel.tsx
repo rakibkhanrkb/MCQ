@@ -12,6 +12,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanelProps) {
+  const isCurrentOperatorHardcore = activeAdminUsername.toLowerCase() === 'rkb_bitbox';
   const [exams, setExams] = useState<Exam[]>([]);
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [results, setResults] = useState<any[]>([]);
@@ -754,6 +755,60 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     }
   };
 
+  const handleForceLogoutAdmin = async (ad: AdminAccount) => {
+    if (!ad.id) return;
+    if (!confirm(`আপনি কি নিশ্চিতভাবে অ্যাডমিন "${ad.name}" কে বাধ্যতামূলকভাবে লগআউট করাতে চান?`)) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await updateDoc(doc(db, 'admins', ad.id), {
+        isLoggedIn: false
+      });
+      await logActivity("Admin Management", `Forced logout admin session: "${ad.name}"`, `Username: ${ad.username}`);
+      alert(`অ্যাডমিন "${ad.name}" কে সফলভাবে বাধ্যতামূলকভাবে লগআউট করানো হয়েছে!`);
+    } catch (err) {
+      alert('ভুল হয়েছে: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForceLogoutAll = async () => {
+    const activeAdminsExceptMe = adminsList.filter(ad => 
+      ad.username.toLowerCase() !== 'rkb_bitbox' && 
+      ad.username.toLowerCase() !== activeAdminUsername.toLowerCase() && 
+      ad.isLoggedIn
+    );
+    
+    if (activeAdminsExceptMe.length === 0) {
+      alert("বাকি কোনো অ্যাডমিন বর্তমানে সচল লগইন অবস্থায় নেই!");
+      return;
+    }
+
+    if (!confirm(`আপনি কি নিশ্চিতভাবে বাকি সকল সচল অ্যাডমিনকে (${activeAdminsExceptMe.length} জন) বাধ্যতামূলকভাবে লগআউট করিয়ে দিতে চান?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let count = 0;
+      const batchUpdates = activeAdminsExceptMe.map(async (ad) => {
+        if (ad.id) {
+          count++;
+          await updateDoc(doc(db, 'admins', ad.id), { isLoggedIn: false });
+        }
+      });
+      await Promise.all(batchUpdates);
+      await logActivity("Admin Management", `Forced logout all other active admins`, `Count: ${count}`);
+      alert(`${count} জন অ্যাডমিনকে সফলভাবে বাধ্যতামূলক লগআউট করানো হয়েছে!`);
+    } catch (err) {
+      alert("ভুল হয়েছে: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Add / Edit Student users
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1205,6 +1260,10 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     ? Math.round(results.reduce((acc, r) => acc + (parseFloat(r.percentage) || 0), 0) / results.length)
     : 0;
 
+  const loggedInAdminObj = adminsList.find(ad => ad.username.toLowerCase() === activeAdminUsername.toLowerCase());
+  const loggedInAdminName = loggedInAdminObj?.name || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'Rkb_bitBox System Superuser' : activeAdminUsername);
+  const loggedInAdminRole = loggedInAdminObj?.role || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'superadmin' : 'operator');
+
   return (
     <div className="space-y-6">
       {/* Admin Title Banner */}
@@ -1217,12 +1276,32 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
           <h2 className="text-2xl font-extrabold tracking-tight text-text-main">ADMIN CENTRAL DESK</h2>
           <p className="text-text-dim text-xs font-semibold uppercase tracking-wider leading-none">Global Operations & Database Management</p>
         </div>
-        <button 
-          onClick={onLogout}
-          className="bg-danger/8 hover:bg-danger/12 border border-danger/10 text-danger px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 transition-all self-start sm:self-center cursor-pointer"
-        >
-          <LogOut size={13} className="opacity-80" /> Exit Console
-        </button>
+        
+        <div className="flex flex-wrap items-center gap-3 md:gap-5 z-10 self-start sm:self-center">
+          {/* Logged-in Admin Profile Card */}
+          <div className="flex items-center gap-3 bg-surface-hover/60 border border-border/80 px-4 py-2.5 rounded-2xl shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-accent/15 border border-accent/20 flex items-center justify-center text-accent text-sm font-black uppercase">
+              {loggedInAdminName ? loggedInAdminName[0].toUpperCase() : 'A'}
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-black text-text-main leading-tight line-clamp-1">{loggedInAdminName}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${loggedInAdminRole === 'superadmin' ? 'bg-amber-500' : 'bg-accent'} shrink-0`} />
+                <span className="text-[9px] uppercase tracking-wider text-text-dim font-bold font-mono">
+                  {loggedInAdminRole === 'superadmin' ? '👑 Super Admin' : '👤 Operator'}
+                </span>
+                <span className="text-[9px] text-success font-black uppercase tracking-widest font-mono shrink-0 ml-1">● Online</span>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            onClick={onLogout}
+            className="bg-danger/8 hover:bg-danger/12 border border-danger/10 text-danger px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 transition-all cursor-pointer h-11 shadow-sm hover:shadow-md"
+          >
+            <LogOut size={13} className="opacity-80" /> Exit Console
+          </button>
+        </div>
       </div>
 
       {/* Apex Grid Overview Statistics */}
@@ -3244,14 +3323,26 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
             {/* Right Column: Admin List Table Grid */}
             <div className="lg:col-span-8 space-y-6">
               <div className="bg-surface border border-border/80 rounded-2xl p-6 md:p-8 shadow-sm space-y-4">
-                <div className="pb-4 border-b border-border/60">
-                  <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
-                    <ShieldCheck className="text-accent" size={18} />
-                    ADMINISTRATOR ROSTER LAYOUT (সিস্টেম অ্যাডমিনদের তালিকা)
-                  </h3>
-                  <p className="text-text-dim text-[11px] leading-relaxed mt-1">
-                    Hardcore superadmin <span className="font-mono text-accent font-black">rkb_bitBox</span> has absolute static privileges & cannot be modified or deleted. Other custom admin privileges can be customized below.
-                  </p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-border/60 gap-4">
+                  <div>
+                    <h3 className="text-base font-extrabold flex items-center gap-2 text-text-main uppercase tracking-wider">
+                      <ShieldCheck className="text-accent" size={18} />
+                      ADMINISTRATOR ROSTER LAYOUT (সিস্টেম অ্যাডমিনদের তালিকা)
+                    </h3>
+                    <p className="text-text-dim text-[11px] leading-relaxed mt-1">
+                      Hardcore superadmin <span className="font-mono text-accent font-black">rkb_bitBox</span> has absolute static privileges & cannot be modified or deleted. Other custom admin privileges can be customized below.
+                    </p>
+                  </div>
+                  
+                  {isCurrentOperatorHardcore && adminsList.some(ad => ad.isLoggedIn && ad.username.toLowerCase() !== 'rkb_bitbox') && (
+                    <button
+                      onClick={handleForceLogoutAll}
+                      className="bg-danger/8 hover:bg-danger text-danger hover:text-white border border-danger/25 px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all tracking-wider flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                    >
+                      <LogOut size={11} />
+                      সকলকে ফোর্স লগআউট করুন (Force Logout All)
+                    </button>
+                  )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -3267,34 +3358,53 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                     </thead>
                     <tbody className="divide-y divide-border/40">
                       {/* Hardcoded Built-in Super Admin [rkb_bitBox] */}
-                      <tr className="group hover:bg-accent/5 transition-colors bg-accent/3">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/20 flex items-center justify-center text-accent text-xs font-black">
-                              R
-                            </div>
-                            <div>
-                              <p className="font-black text-text-main uppercase">Rkb_bitBox System Superuser</p>
-                              <p className="text-[10px] text-accent font-mono font-bold">Hardcoded Core</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 font-mono font-bold text-accent">rkb_bitBox</td>
-                        <td className="py-3 px-4 font-mono font-semibold text-text-dim">••••••••</td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="bg-amber-100 border border-amber-200 text-amber-800 text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-widest font-mono">
-                            👑 Built-In Superuser
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-1.5 opacity-60">
-                            <span className="text-[9.5px] text-text-dim italic font-mono">- Protected -</span>
-                          </div>
-                        </td>
-                      </tr>
+                      {(() => {
+                        const rkbActiveDoc = adminsList.find(a => a.username.toLowerCase() === 'rkb_bitbox');
+                        const isRkbActive = rkbActiveDoc ? rkbActiveDoc.isLoggedIn : false;
+                        return (
+                          <tr className="group hover:bg-accent/5 transition-colors bg-accent/3">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/20 flex items-center justify-center text-accent text-xs font-black">
+                                  R
+                                </div>
+                                <div>
+                                  <p className="font-black text-text-main uppercase">Rkb_bitBox System Superuser</p>
+                                  <p className="text-[10px] text-accent font-mono font-bold">Hardcoded Core</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 font-mono font-bold text-accent">rkb_bitBox</td>
+                            <td className="py-3 px-4 font-mono font-semibold text-text-dim">••••••••</td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex flex-col items-center gap-1 justify-center">
+                                <span className="bg-amber-100 border border-amber-200 text-amber-800 text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-widest font-mono">
+                                  👑 Built-In Superuser
+                                </span>
+                                {isRkbActive ? (
+                                  <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-extrabold py-0.5 px-1.5 rounded-full inline-flex items-center gap-1 uppercase font-mono mt-0.5">
+                                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                    সচল (Online)
+                                  </span>
+                                ) : (
+                                  <span className="bg-text-dim/8 border border-text-dim/15 text-text-dim text-[8px] font-bold py-0.5 px-1.5 rounded-full inline-flex items-center gap-1 uppercase font-mono mt-0.5">
+                                    <span className="w-1 h-1 rounded-full bg-text-dim/50" />
+                                    নিষ্ক্রিয় (Offline)
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-1.5 opacity-60">
+                                <span className="text-[9.5px] text-text-dim italic font-mono">- Protected -</span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })()}
 
                       {/* Custom Admins from Firestore */}
-                      {adminsList.map((ad) => (
+                      {adminsList.filter(ad => ad.username.toLowerCase() !== 'rkb_bitbox').map((ad) => (
                         <tr key={ad.id} className="group hover:bg-surface-hover/40 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
@@ -3310,12 +3420,37 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                           <td className="py-3 px-4 font-mono text-text-main font-bold">{ad.username}</td>
                           <td className="py-3 px-4 font-mono text-text-dim font-semibold">••••••••</td>
                           <td className="py-3 px-4 text-center">
-                            <span className="bg-bg border border-border/80 text-text-main text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-wider font-mono">
-                              {ad.role === 'superadmin' ? '⭐ Super Admin' : '👤 Operator'}
-                            </span>
+                            <div className="flex flex-col items-center gap-1 justify-center">
+                              <span className="bg-bg border border-border/80 text-text-main text-[8.5px] font-extrabold py-0.5 px-2 rounded uppercase tracking-wider font-mono">
+                                {ad.role === 'superadmin' ? '⭐ Super Admin' : '👤 Operator'}
+                              </span>
+                              {ad.isLoggedIn ? (
+                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-extrabold py-0.5 px-1.5 rounded-full inline-flex items-center gap-1 uppercase font-mono mt-0.5">
+                                  <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                  সচল (Online)
+                                </span>
+                              ) : (
+                                <span className="bg-text-dim/8 border border-text-dim/15 text-text-dim text-[8px] font-bold py-0.5 px-1.5 rounded-full inline-flex items-center gap-1 uppercase font-mono mt-0.5">
+                                  <span className="w-1 h-1 rounded-full bg-text-dim/50" />
+                                  নিষ্ক্রিয় (Offline)
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <div className="flex justify-end gap-1.5">
+                            <div className="flex justify-end items-center gap-1.5">
+                              {/* Force Logout Button */}
+                              {ad.isLoggedIn && isCurrentOperatorHardcore && (
+                                <button
+                                  onClick={() => handleForceLogoutAdmin(ad)}
+                                  className="bg-danger/8 hover:bg-danger hover:text-white text-danger border border-danger/30 px-2 py-1.5 rounded-xl transition-all font-bold text-[9px] uppercase tracking-wider cursor-pointer flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
+                                  title="Force Logout / বাধ্যতামূলক লগআউট করতে ক্লিক করুন"
+                                >
+                                  <LogOut size={10} />
+                                  <span>ফোর্স লগআউট</span>
+                                </button>
+                              )}
+                              
                               <button
                                 onClick={() => handleEditAdmin(ad)}
                                 className="bg-bg hover:bg-accent/8 hover:text-accent hover:border-accent/20 border border-border/70 p-2 rounded-xl transition-all cursor-pointer"
@@ -3335,7 +3470,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                         </tr>
                       ))}
 
-                      {adminsList.length === 0 && (
+                      {adminsList.filter(ad => ad.username.toLowerCase() !== 'rkb_bitbox').length === 0 && (
                         <tr>
                           <td colSpan={5} className="py-6 text-center text-text-dim italic">
                             অন্য কোনো কাস্টম অ্যাডমিন অ্যাকাউন্ট তৈরি করা নেই।

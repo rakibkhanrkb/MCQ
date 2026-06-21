@@ -1,10 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;600;700&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: "SolaimanLipi";
+  src: url("https://cdn.jsdelivr.net/gh/maateen/solaimanlipi@master/SolaimanLipi.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SolaimanLipi";
+  src: url("https://cdn.jsdelivr.net/gh/maateen/solaimanlipi@master/SolaimanLipi_Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "SolaimanLipi", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-bengali: "Noto Sans Bengali", sans-serif;
+  --font-bengali: "SolaimanLipi", "Noto Sans Bengali", sans-serif;
   
   --color-bg: #eff7f6; /* Beautiful soft cool teal-gray light background */
   --color-surface: #ffffff; /* pure white surface cards */
@@ -26,6 +42,14 @@
 }
 
 @layer base {
+  html {
+    font-size: 17px; /* Proportional scale upward for better legibility of Bengali text */
+  }
+  @media (max-width: 640px) {
+    html {
+      font-size: 15.5px;
+    }
+  }
   body {
     background-color: var(--color-bg);
     color: var(--color-text-main);
