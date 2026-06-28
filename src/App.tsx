@@ -284,13 +284,25 @@ export default function App() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    // Safety timeout to prevent getting stuck in "BOOTSTRAPPING..." on intermittent or slow mobile networks
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Firebase Auth taking too long; safety fallback triggered to allow offline/guest access.");
+        setLoading(false);
+      }
+    }, 1800);
+
     const unsubAuth = onAuthStateChanged(auth, (u) => {
+      if (!isMounted) return;
       setUser(u);
       if (!u) {
         signInAnonymously(auth).catch(err => {
           console.warn("Anonymous auth restricted, continuing as guest:", err.message);
         });
       }
+      clearTimeout(safetyTimeout);
       setLoading(false);
     });
 
@@ -339,6 +351,8 @@ export default function App() {
     });
 
     return () => {
+      isMounted = false;
+      clearTimeout(safetyTimeout);
       unsubAuth();
       unsubSettings();
       unsubQ();
