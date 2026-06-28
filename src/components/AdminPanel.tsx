@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, deleteDoc, doc, writeBatch, getDocs, limit, updateDoc, where, arrayUnion, setDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, deleteDoc, doc, writeBatch, getDocs, limit, updateDoc, where, arrayUnion, setDoc, getCountFromServer } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Question, Exam, UserAccount, PaymentSlip, ExamRoutine, AdminAccount } from '../types';
 import { handleFirestoreError } from '../lib/error-handler';
-import { Trash2, Plus, Download, LogOut, ShieldCheck, Shield, Users, UserPlus, Search, History as HistoryIcon, Edit2, Check, X, CreditCard, Layers, Tag, Clock, DollarSign, Calendar, Eye, Sparkles, Settings, FileText, Upload } from 'lucide-react';
+import { Trash2, Plus, Download, LogOut, ShieldCheck, Shield, Users, UserPlus, Search, History as HistoryIcon, Edit2, Check, X, CreditCard, Layers, Tag, Clock, DollarSign, Calendar, Eye, Sparkles, Settings, FileText, Upload, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { openOrDownloadRoutine } from '../utils/fileDownloader';
 
 interface AdminPanelProps {
   onLogout: () => void;
@@ -20,6 +21,100 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   const [routines, setRoutines] = useState<ExamRoutine[]>([]);
   const [activeTab, setActiveTab] = useState<'exams' | 'users' | 'results' | 'payments' | 'settings' | 'routines' | 'admins' | 'logs' | 'paid_users'>('exams');
   const [loading, setLoading] = useState(false);
+
+  // Synchronization and loading states
+  const [examsLoaded, setExamsLoaded] = useState(false);
+  const [usersLoaded, setUsersLoaded] = useState(false);
+  const [resultsLoaded, setResultsLoaded] = useState(false);
+  const [paymentsLoaded, setPaymentsLoaded] = useState(false);
+  const [adminsLoaded, setAdminsLoaded] = useState(false);
+  const [logsLoaded, setLogsLoaded] = useState(true);
+  const [logsSyncedOnce, setLogsSyncedOnce] = useState(false);
+  const [logsSyncing, setLogsSyncing] = useState(false);
+  const [syncCount, setSyncCount] = useState(0);
+
+  // Real-time server-side aggregate database counts for instant, correct totals
+  const [totalExamsCount, setTotalExamsCount] = useState(0);
+  const [publishedExamsCountState, setPublishedExamsCountState] = useState(0);
+  const [totalStudentsCount, setTotalStudentsCount] = useState(0);
+  const [fullPaidCount, setFullPaidCount] = useState(0);
+  const [totalResultsCount, setTotalResultsCount] = useState(0);
+  const [pendingPaymentsCountState, setPendingPaymentsCountState] = useState(0);
+
+  const fetchDatabaseCounts = async () => {
+    // Isolated helper to fetch count with retry
+    const safeGetCount = async (queryOrCol: any, label: string): Promise<number | null> => {
+      let attempts = 3;
+      while (attempts > 0) {
+        try {
+          const snap = await getCountFromServer(queryOrCol);
+          return snap.data().count;
+        } catch (err: any) {
+          attempts--;
+          console.warn(`Attempt failed fetching count for ${label} (${attempts} left):`, err.message || err);
+          if (attempts > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+      return null;
+    };
+
+    try {
+      const examsCount = await safeGetCount(collection(db, 'exams'), 'exams');
+      if (examsCount !== null) setTotalExamsCount(examsCount);
+
+      const pubCount = await safeGetCount(query(collection(db, 'exams'), where('isPublished', '==', true)), 'published_exams');
+      if (pubCount !== null) setPublishedExamsCountState(pubCount);
+
+      const studentsCount = await safeGetCount(collection(db, 'users'), 'users');
+      if (studentsCount !== null) setTotalStudentsCount(studentsCount);
+
+      const paidCount = await safeGetCount(query(collection(db, 'users'), where('isPaidUser', '==', true)), 'full_paid_users');
+      if (paidCount !== null) setFullPaidCount(paidCount);
+
+      const resultsCount = await safeGetCount(collection(db, 'exam_results'), 'exam_results');
+      if (resultsCount !== null) setTotalResultsCount(resultsCount);
+
+      const pendingPay = await safeGetCount(query(collection(db, 'payments'), where('status', '==', 'pending')), 'pending_payments');
+      if (pendingPay !== null) setPendingPaymentsCountState(pendingPay);
+    } catch (error) {
+      console.error("General failure in fetchDatabaseCounts:", error);
+    }
+  };
+
+  const handleForceSync = () => {
+    setExamsLoaded(false);
+    setUsersLoaded(false);
+    setResultsLoaded(false);
+    setPaymentsLoaded(false);
+    setAdminsLoaded(false);
+    setLogsSyncedOnce(false);
+    setActivityLogs([]);
+    fetchDatabaseCounts();
+    setSyncCount(prev => prev + 1);
+  };
+
+  const handleSyncLogs = async () => {
+    setLogsSyncing(true);
+    try {
+      const logsQuery = query(collection(db, 'activity_logs'), limit(500));
+      const snapshot = await getDocs(logsQuery);
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const sorted = data.sort((a: any, b: any) => {
+        const tA = a.timestamp?.seconds || 0;
+        const tB = b.timestamp?.seconds || 0;
+        return tB - tA;
+      });
+      setActivityLogs(sorted);
+      setLogsSyncedOnce(true);
+    } catch (error) {
+      console.error("Activity logs manual sync error:", error);
+      alert("লগ ফাইল সিঙ্ক করতে সমস্যা হয়েছে। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করুন।");
+    } finally {
+      setLogsSyncing(false);
+    }
+  };
 
   // Exam Publish set duration states
   const [selectedExamToPublish, setSelectedExamToPublish] = useState<Exam | null>(null);
@@ -423,20 +518,43 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   }, [selectedExamForMCQs?.id]);
 
   useEffect(() => {
-    // Read Exams
-    const examsQuery = query(collection(db, 'exams'), orderBy('createdAt', 'desc'));
+    // Fetch aggregate totals instantly
+    fetchDatabaseCounts();
+
+    // Read Exams (No server-side orderBy to avoid missing documents with missing fields, and avoid index requirements)
+    const examsQuery = query(collection(db, 'exams'));
     const unsubscribeExams = onSnapshot(examsQuery, (snapshot) => {
-      setExams(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Exam)));
-    }, error => console.warn("Exams snapshot reading error:", error.message));
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Exam));
+      const sorted = data.sort((a, b) => {
+        const tA = (a.createdAt as any)?.seconds || 0;
+        const tB = (b.createdAt as any)?.seconds || 0;
+        return tB - tA;
+      });
+      setExams(sorted);
+      setExamsLoaded(true);
+    }, error => {
+      console.warn("Exams snapshot reading error:", error.message);
+      setExamsLoaded(true);
+    });
 
-    // Read Users (Students)
-    const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+    // Read Users (Students) limited to latest 500 profiles for high performance (No server-side orderBy to avoid silently omitting records missing 'createdAt' and avoid index requirements)
+    const usersQuery = query(collection(db, 'users'), limit(500));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
-      setUsers(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserAccount)));
-    }, error => console.warn("Users snapshot reading error:", error.message));
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserAccount));
+      const sorted = data.sort((a, b) => {
+        const tA = (a.createdAt as any)?.seconds || 0;
+        const tB = (b.createdAt as any)?.seconds || 0;
+        return tB - tA;
+      });
+      setUsers(sorted);
+      setUsersLoaded(true);
+    }, error => {
+      console.warn("Users snapshot reading error:", error.message);
+      setUsersLoaded(true);
+    });
 
-    // Read Results
-    const resultsQuery = query(collection(db, 'exam_results'), limit(500));
+    // Read Results limited to latest 150 records for instant rendering
+    const resultsQuery = query(collection(db, 'exam_results'), limit(150));
     const unsubscribeResults = onSnapshot(resultsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       const sorted = data.sort((a: any, b: any) => {
@@ -445,10 +563,14 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         return tB - tA;
       });
       setResults(sorted);
-    }, error => console.warn("Results snapshot reading error:", error.message));
+      setResultsLoaded(true);
+    }, error => {
+      console.warn("Results snapshot reading error:", error.message);
+      setResultsLoaded(true);
+    });
 
-    // Read Payments ledger
-    const paymentsQuery = query(collection(db, 'payments'), limit(500));
+    // Read Payments ledger limited to latest 150 payments for instant rendering
+    const paymentsQuery = query(collection(db, 'payments'), limit(150));
     const unsubscribePayments = onSnapshot(paymentsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PaymentSlip));
       const sorted = data.sort((a: any, b: any) => {
@@ -457,28 +579,20 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         return tB - tA;
       });
       setPayments(sorted);
-    }, error => console.warn("Payments snapshot reading error:", error.message));
+      setPaymentsLoaded(true);
+    }, error => {
+      console.warn("Payments snapshot reading error:", error.message);
+      setPaymentsLoaded(true);
+    });
 
     // Read Admins
     const adminsQuery = query(collection(db, 'admins'));
     const unsubscribeAdmins = onSnapshot(adminsQuery, (snapshot) => {
       setAdminsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AdminAccount)));
+      setAdminsLoaded(true);
     }, error => {
       console.warn("Admins reading error:", error.message);
-    });
-
-    // Read Activity Logs
-    const logsQuery = query(collection(db, 'activity_logs'), limit(500));
-    const unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
-      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      const sorted = data.sort((a: any, b: any) => {
-        const tA = a.timestamp?.seconds || 0;
-        const tB = b.timestamp?.seconds || 0;
-        return tB - tA;
-      });
-      setActivityLogs(sorted);
-    }, error => {
-      console.warn("Activity logs reading error:", error.message);
+      setAdminsLoaded(true);
     });
 
     return () => {
@@ -487,9 +601,8 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       unsubscribeResults();
       unsubscribePayments();
       unsubscribeAdmins();
-      unsubscribeLogs();
     };
-  }, []);
+  }, [syncCount]);
 
   // Questions addition helper for active exam creator
   const handleAddQuestionToExam = (e: React.FormEvent) => {
@@ -1250,11 +1363,11 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     }
   };
 
-  const totalExams = exams.length;
-  const publishedExamsCount = exams.filter(e => e.isPublished).length;
-  const totalStudents = users.length;
-  const totalAssessments = results.length;
-  const pendingPaymentsCount = payments.filter(p => p.status === 'pending').length;
+  const totalExams = totalExamsCount || exams.length;
+  const publishedExamsCount = publishedExamsCountState || exams.filter(e => e.isPublished).length;
+  const totalStudents = totalStudentsCount || users.length;
+  const totalAssessments = totalResultsCount || results.length;
+  const pendingPaymentsCount = pendingPaymentsCountState || payments.filter(p => p.status === 'pending').length;
 
   const averageAccuracy = results.length > 0 
     ? Math.round(results.reduce((acc, r) => acc + (parseFloat(r.percentage) || 0), 0) / results.length)
@@ -1263,6 +1376,66 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   const loggedInAdminObj = adminsList.find(ad => ad.username.toLowerCase() === activeAdminUsername.toLowerCase());
   const loggedInAdminName = loggedInAdminObj?.name || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'Rkb_bitBox System Superuser' : activeAdminUsername);
   const loggedInAdminRole = loggedInAdminObj?.role || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'superadmin' : 'operator');
+
+  const allLoaded = examsLoaded && usersLoaded && resultsLoaded && paymentsLoaded && adminsLoaded && logsLoaded;
+
+  if (!allLoaded) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 bg-surface border border-border/80 rounded-3xl shadow-sm space-y-6">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-accent/10 border-t-accent rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Sparkles className="text-accent animate-pulse" size={20} />
+          </div>
+        </div>
+        <div className="text-center space-y-2 max-w-sm">
+          <h3 className="text-lg font-extrabold text-text-main tracking-tight uppercase">Loading Control Panel / ড্যাশবোর্ড ডাটা লোড হচ্ছে</h3>
+          <p className="text-xs text-text-dim font-medium">
+            ডাটাবেস থেকে রিয়েল-টাইম ডাটা সিঙ্ক করা হচ্ছে। অনুগ্রহ করে অপেক্ষা করুন...
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 max-w-md w-full pt-4 border-t border-border/40 text-[11px] font-bold font-mono">
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim">EXAMS (পরীক্ষা):</span>
+            <span className={examsLoaded ? "text-success" : "text-amber-500 animate-pulse"}>
+              {examsLoaded ? "✓ LOADED" : "SYNCING..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim">STUDENTS (শিক্ষার্থী):</span>
+            <span className={usersLoaded ? "text-success" : "text-amber-500 animate-pulse"}>
+              {usersLoaded ? "✓ LOADED" : "SYNCING..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim">RESULTS (ফলাফল):</span>
+            <span className={resultsLoaded ? "text-success" : "text-amber-500 animate-pulse"}>
+              {resultsLoaded ? "✓ LOADED" : "SYNCING..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim">PAYMENTS (পেমেন্ট):</span>
+            <span className={paymentsLoaded ? "text-success" : "text-amber-500 animate-pulse"}>
+              {paymentsLoaded ? "✓ LOADED" : "SYNCING..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim font-sans">ADMINS (অ্যাডমিন):</span>
+            <span className={adminsLoaded ? "text-success" : "text-amber-500 animate-pulse"}>
+              {adminsLoaded ? "✓ LOADED" : "SYNCING..."}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 bg-surface-hover/40 border border-border/50 rounded-xl">
+            <span className="text-text-dim font-sans">LOGS (লগ ফাইল):</span>
+            <span className="text-accent font-extrabold uppercase text-[9px] tracking-wider">
+              MANUAL / আলাদা বাটন
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -1294,6 +1467,15 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
               </div>
             </div>
           </div>
+
+          <button 
+            onClick={handleForceSync}
+            className="bg-success/8 hover:bg-success/12 border border-success/10 text-success px-4.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 transition-all cursor-pointer h-11 shadow-sm hover:shadow-md"
+            title="Force re-sync and reload all real-time listeners from Firestore"
+          >
+            <RefreshCw size={13} className="animate-pulse text-success" />
+            <span>Sync Data</span>
+          </button>
 
           <button 
             onClick={onLogout}
@@ -1375,7 +1557,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
         {[
           { id: 'exams', label: 'Manage MCQ Exams', count: `${publishedExamsCount} live`, icon: Layers },
           { id: 'users', label: 'Registered Students', count: `${totalStudents} profiles`, icon: Users },
-          { id: 'paid_users', label: 'Paid Users (পেইড ইউজার)', count: `${users.filter(u => u.isPaidUser === true || (u.purchasedExamIds && u.purchasedExamIds.length > 0)).length} active`, icon: Sparkles },
+          { id: 'paid_users', label: 'Paid Users (পেইড ইউজার)', count: `${fullPaidCount || users.filter(u => u.isPaidUser === true || (u.purchasedExamIds && u.purchasedExamIds.length > 0)).length} active`, icon: Sparkles },
           { id: 'results', label: 'Exam Results', count: `${totalAssessments} records`, icon: HistoryIcon },
           { id: 'payments', label: 'BKash Ledger', count: pendingPaymentsCount > 0 ? `${pendingPaymentsCount} action pending` : 'All cleared', icon: CreditCard, alert: pendingPaymentsCount > 0 },
           { id: 'routines', label: 'Exam Routines', count: `${routines.length} items`, icon: Calendar },
@@ -2366,7 +2548,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
               <div className="bg-surface border border-border/80 rounded-2xl p-5 shadow-sm space-y-1">
                 <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">Total Students (মোট শিক্ষার্থী)</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-text-main font-mono">{users.length}</span>
+                  <span className="text-2xl font-black text-text-main font-mono">{totalStudentsCount || users.length}</span>
                   <span className="text-xs text-text-dim font-bold font-sans">profiles</span>
                 </div>
               </div>
@@ -2374,7 +2556,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                 <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">Full Access Members (পূর্ণ অ্যাক্সেসধারী)</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-success font-mono">
-                    {users.filter(u => u.isPaidUser === true).length}
+                    {fullPaidCount || users.filter(u => u.isPaidUser === true).length}
                   </span>
                   <span className="text-xs text-text-dim font-bold font-sans">All Paid Exams</span>
                 </div>
@@ -2392,7 +2574,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                 <span className="text-[10px] font-black text-text-dim uppercase tracking-wider block">No Premium Access (কোনো অ্যাক্সেস নেই)</span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-text-dim font-mono">
-                    {users.filter(u => u.isPaidUser !== true && (!u.purchasedExamIds || u.purchasedExamIds.length === 0)).length}
+                    {Math.max(0, (totalStudentsCount || users.length) - (fullPaidCount || users.filter(u => u.isPaidUser === true).length))}
                   </span>
                   <span className="text-xs text-text-dim font-bold">Unlicensed</span>
                 </div>
@@ -3181,14 +3363,12 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
 
                         {item.fileUrl && (
                           <div className="pt-1.5 flex gap-2 items-center flex-wrap">
-                            <a
-                              href={item.fileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 bg-bg border border-border hover:bg-surface-hover hover:text-accent p-2 rounded-lg text-[10px] font-extrabold uppercase text-text-main tracking-wide transition-colors cursor-pointer"
+                            <button
+                              onClick={() => openOrDownloadRoutine(item.fileUrl, item.routineType, item.title)}
+                              className="inline-flex items-center gap-1.5 bg-bg border border-border hover:bg-surface-hover hover:text-accent p-2 rounded-lg text-[10px] font-extrabold uppercase text-text-main tracking-wide transition-colors cursor-pointer border-none outline-none"
                             >
                               <Download size={11} /> Open/Download Document
-                            </a>
+                            </button>
                             {item.routineType === 'image' && item.fileUrl.startsWith('data:') && (
                               <img
                                 src={item.fileUrl}
@@ -3538,15 +3718,25 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
 
             {/* Logs Audit List Container */}
             <div className="bg-surface border border-border/80 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-6 md:p-8 border-b border-border/50 flex flex-wrap gap-4 items-center justify-between">
+              <div className="p-6 md:p-8 border-b border-border/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="text-base font-black text-text-main uppercase tracking-tight">📜 SYSTEM CHANGE LOGS & ADMINISTRATIVE AUDITS</h3>
                   <p className="text-[10px] text-text-dim font-bold uppercase tracking-widest">Verifiable ledger tracking all administrative state modifications</p>
                 </div>
 
-                {/* Filter and Search controls */}
-                <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto mt-2 sm:mt-0">
-                  <div className="relative flex-grow sm:flex-grow-0 sm:w-64">
+                {/* Filter, Search, and Manual Sync controls */}
+                <div className="flex flex-wrap gap-2.5 items-center w-full sm:w-auto mt-2 sm:mt-0">
+                  <button
+                    onClick={handleSyncLogs}
+                    disabled={logsSyncing}
+                    className="flex items-center gap-2 bg-accent/8 hover:bg-accent/15 disabled:opacity-50 text-accent font-extrabold text-[10px] px-3.5 py-2.5 rounded-xl border border-accent/20 cursor-pointer transition-all uppercase shrink-0"
+                    title="Manual Log Sync"
+                  >
+                    <RefreshCw size={11} className={logsSyncing ? "animate-spin" : ""} />
+                    {logsSyncing ? "Syncing..." : "Sync Logs / সিঙ্ক করুন"}
+                  </button>
+
+                  <div className="relative flex-grow sm:flex-grow-0 sm:w-48">
                     <input
                       type="text"
                       placeholder="Search log triggers..."
@@ -3576,52 +3766,74 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
 
               {/* Log Timeline Output */}
               <div className="p-6 md:p-8 space-y-4 max-h-[600px] overflow-y-auto">
-                {filteredLogs.map((log) => (
-                  <div 
-                    key={log.id} 
-                    className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border border-border/60 hover:border-border transition-all bg-surface bg-gradient-to-r from-transparent to-surface-hover/10"
-                  >
-                    {/* Timestamp & operator detail */}
-                    <div className="md:w-48 shrink-0 flex flex-col md:border-r border-border/50 md:pr-4">
-                      <span className="text-xs font-mono font-black text-accent flex items-center gap-1.5 uppercase">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                        {log.adminUsername}
-                      </span>
-                      <span className="text-[10px] text-text-dim font-bold uppercase mt-1">
-                        {log.timestamp?.seconds ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'Just now'}
-                      </span>
+                {!logsSyncedOnce ? (
+                  <div className="py-16 text-center border border-dashed border-border/80 rounded-2xl bg-surface-hover/10 space-y-4">
+                    <FileText className="mx-auto text-text-dim/80" size={36} />
+                    <div className="space-y-1.5 max-w-sm mx-auto">
+                      <p className="text-sm font-black text-text-main uppercase tracking-tight">লগ ফাইল সিঙ্ক করা হয়নি / Logs Not Synced</p>
+                      <p className="text-[11px] text-text-dim font-medium leading-relaxed">
+                        ড্যাশবোর্ড দ্রুত লোড করার জন্য লগ সিঙ্কিং বন্ধ রাখা হয়েছে। আপনি নিচের বাটনে ক্লিক করে শুধুমাত্র লগ ফাইলগুলি ডাইরেক্ট লোড করতে পারেন।
+                      </p>
                     </div>
-
-                    {/* Action Text */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase tracking-wider border ${
-                          log.category === "Exam Management" ? "bg-accent/8 border-accent/25 text-accent" :
-                          log.category === "Question Management" ? "bg-amber-100 border-amber-300 text-amber-800" :
-                          log.category === "Payment Management" ? "bg-success/10 border-success/30 text-success" :
-                          log.category === "User Management" ? "bg-blue-100 border-blue-200 text-blue-800" :
-                          "bg-surface-hover border-border text-text-dim"
-                        }`}>
-                          {log.category}
-                        </span>
-                        <h4 className="text-xs font-black text-text-main uppercase">{log.action || 'Performed administrative task'}</h4>
-                      </div>
-                      
-                      {log.details && (
-                        <div className="p-3 bg-bg border border-border/70 rounded-xl font-mono text-[10px] text-text-dim/90 break-all leading-relaxed whitespace-pre-wrap">
-                          {log.details}
+                    <button
+                      onClick={handleSyncLogs}
+                      disabled={logsSyncing}
+                      className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-extrabold text-xs px-5 py-3 rounded-2xl cursor-pointer disabled:opacity-50 transition-all uppercase shadow-sm"
+                    >
+                      <RefreshCw size={13} className={logsSyncing ? "animate-spin" : ""} />
+                      {logsSyncing ? "Syncing Logs..." : "Load Logs Now / লগ ফাইল লোড করুন"}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {filteredLogs.map((log) => (
+                      <div 
+                        key={log.id} 
+                        className="flex flex-col md:flex-row gap-4 p-4 rounded-xl border border-border/60 hover:border-border transition-all bg-surface bg-gradient-to-r from-transparent to-surface-hover/10"
+                      >
+                        {/* Timestamp & operator detail */}
+                        <div className="md:w-48 shrink-0 flex flex-col md:border-r border-border/50 md:pr-4">
+                          <span className="text-xs font-mono font-black text-accent flex items-center gap-1.5 uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                            {log.adminUsername}
+                          </span>
+                          <span className="text-[10px] text-text-dim font-bold uppercase mt-1">
+                            {log.timestamp?.seconds ? new Date(log.timestamp.seconds * 1000).toLocaleString() : 'Just now'}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
 
-                {filteredLogs.length === 0 && (
-                  <div className="py-16 text-center border border-dashed border-border/80 rounded-2xl bg-surface-hover/10 space-y-2">
-                    <FileText className="mx-auto text-text-dim/80" size={28} />
-                    <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider">No Auditable Entries Found</p>
-                    <p className="text-[9px] text-text-dim/80 max-w-xs mx-auto">Either no administrative events matching selection filters exist, or database ledger is completely clean.</p>
-                  </div>
+                        {/* Action Text */}
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase tracking-wider border ${
+                              log.category === "Exam Management" ? "bg-accent/8 border-accent/25 text-accent" :
+                              log.category === "Question Management" ? "bg-amber-100 border-amber-300 text-amber-800" :
+                              log.category === "Payment Management" ? "bg-success/10 border-success/30 text-success" :
+                              log.category === "User Management" ? "bg-blue-100 border-blue-200 text-blue-800" :
+                              "bg-surface-hover border-border text-text-dim"
+                            }`}>
+                              {log.category}
+                            </span>
+                            <h4 className="text-xs font-black text-text-main uppercase">{log.action || 'Performed administrative task'}</h4>
+                          </div>
+                          
+                          {log.details && (
+                            <div className="p-3 bg-bg border border-border/70 rounded-xl font-mono text-[10px] text-text-dim/90 break-all leading-relaxed whitespace-pre-wrap">
+                              {log.details}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {filteredLogs.length === 0 && (
+                      <div className="py-16 text-center border border-dashed border-border/80 rounded-2xl bg-surface-hover/10 space-y-2">
+                        <FileText className="mx-auto text-text-dim/80" size={28} />
+                        <p className="text-[10px] font-bold text-text-dim uppercase tracking-wider">No Auditable Entries Found</p>
+                        <p className="text-[9px] text-text-dim/80 max-w-xs mx-auto">Either no administrative events matching selection filters exist, or database ledger is completely clean.</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

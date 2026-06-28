@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ExamRoutine } from '../types';
 import { Calendar, Download, Eye, FileText, Search, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
+import { openOrDownloadRoutine } from '../utils/fileDownloader';
 
 interface StudentRoutinesProps {
   routines: ExamRoutine[];
@@ -88,15 +89,13 @@ export default function StudentRoutines({ routines }: StudentRoutinesProps) {
 
               {/* Download / Open action if URL exists */}
               {item.fileUrl && (
-                <a
-                  href={item.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-accent hover:bg-accent2 text-white font-extrabold px-4.5 py-2.5 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+                <button
+                  onClick={() => openOrDownloadRoutine(item.fileUrl, item.routineType, item.title)}
+                  className="bg-accent hover:bg-accent-hover text-white font-extrabold px-4.5 py-2.5 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm cursor-pointer border-none outline-none"
                 >
                   <Download size={13} />
                   {item.routineType === 'pdf' ? 'Open PDF File' : 'Save Routine'}
-                </a>
+                </button>
               )}
             </div>
 
