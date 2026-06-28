@@ -61,25 +61,16 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     };
 
     try {
-      const examsCount = await safeGetCount(collection(db, 'exams'), 'exams');
-      if (examsCount !== null) setTotalExamsCount(examsCount);
-
-      const pubCount = await safeGetCount(query(collection(db, 'exams'), where('isPublished', '==', true)), 'published_exams');
-      if (pubCount !== null) setPublishedExamsCountState(pubCount);
-
-      const studentsCount = await safeGetCount(collection(db, 'users'), 'users');
-      if (studentsCount !== null) setTotalStudentsCount(studentsCount);
-
-      const paidCount = await safeGetCount(query(collection(db, 'users'), where('isPaidUser', '==', true)), 'full_paid_users');
-      if (paidCount !== null) setFullPaidCount(paidCount);
-
-      const resultsCount = await safeGetCount(collection(db, 'exam_results'), 'exam_results');
-      if (resultsCount !== null) setTotalResultsCount(resultsCount);
-
-      const pendingPay = await safeGetCount(query(collection(db, 'payments'), where('status', '==', 'pending')), 'pending_payments');
-      if (pendingPay !== null) setPendingPaymentsCountState(pendingPay);
+      await Promise.all([
+        safeGetCount(collection(db, 'exams'), 'exams').then(c => c !== null && setTotalExamsCount(c)),
+        safeGetCount(query(collection(db, 'exams'), where('isPublished', '==', true)), 'published_exams').then(c => c !== null && setPublishedExamsCountState(c)),
+        safeGetCount(collection(db, 'users'), 'users').then(c => c !== null && setTotalStudentsCount(c)),
+        safeGetCount(query(collection(db, 'users'), where('isPaidUser', '==', true)), 'full_paid_users').then(c => c !== null && setFullPaidCount(c)),
+        safeGetCount(collection(db, 'exam_results'), 'exam_results').then(c => c !== null && setTotalResultsCount(c)),
+        safeGetCount(query(collection(db, 'payments'), where('status', '==', 'pending')), 'pending_payments').then(c => c !== null && setPendingPaymentsCountState(c))
+      ]);
     } catch (error) {
-      console.error("General failure in fetchDatabaseCounts:", error);
+      console.error("General failure in fetchDatabaseCounts parallel promise execution:", error);
     }
   };
 
@@ -553,8 +544,8 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       setUsersLoaded(true);
     });
 
-    // Read Results limited to latest 150 records for instant rendering
-    const resultsQuery = query(collection(db, 'exam_results'), limit(150));
+    // Read Results with no limitation to fetch all sessions from database
+    const resultsQuery = query(collection(db, 'exam_results'));
     const unsubscribeResults = onSnapshot(resultsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       const sorted = data.sort((a: any, b: any) => {
@@ -1377,7 +1368,7 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
   const loggedInAdminName = loggedInAdminObj?.name || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'Rkb_bitBox System Superuser' : activeAdminUsername);
   const loggedInAdminRole = loggedInAdminObj?.role || (activeAdminUsername.toLowerCase() === 'rkb_bitbox' ? 'superadmin' : 'operator');
 
-  const allLoaded = examsLoaded && usersLoaded && resultsLoaded && paymentsLoaded && adminsLoaded && logsLoaded;
+  const allLoaded = adminsLoaded;
 
   if (!allLoaded) {
     return (
@@ -2238,91 +2229,100 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                 </div>
 
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  {exams.map((exam) => (
-                    <div key={exam.id} className="bg-surface border border-border/70 hover:border-accent/40 rounded-xl p-5 hover:bg-surface-hover/20 transition-all space-y-4 group">
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="bg-accent/8 text-accent font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider font-mono">Exam Dispatch Node</span>
-                            <span className={`font-mono text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1.5 ${exam.isPublished ? 'bg-success/8 text-success border border-success/10' : 'bg-text-dim/8 text-text-dim border border-border/50'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${exam.isPublished ? 'bg-success' : 'bg-text-dim'}`} />
-                              {exam.isPublished ? 'Live' : 'Draft'}
-                            </span>
-                          </div>
-                          <h4 className="text-base font-extrabold text-text-main leading-tight">
-                            {exam.subject}
-                          </h4>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                          <div className="text-left md:text-right bg-surface-hover border border-border/60 px-3 py-1.5 rounded-xl">
-                            <p className="text-[8px] font-bold uppercase text-text-dim/80 tracking-wider">ENTRANCE TOLL</p>
-                            <h5 className="text-sm font-black text-accent font-mono">৳{exam.price} BDT</h5>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-between gap-4 pt-3.5 border-t border-border/60">
-                        <div className="text-[11px] font-semibold text-text-dim flex items-center gap-1.5">
-                          <Tag size={12} className="text-accent opacity-80" />
-                          <span>Structure: <span className="font-bold text-text-main">{exam.questions?.length || 0} Questions</span>, marks total: <span className="font-bold text-text-main">{exam.questions?.reduce((acc, q) => acc + (q.marks || 1), 0) || 0}</span></span>
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <button
-                            onClick={() => {
-                              setSelectedExamForMCQs(exam);
-                              setPoolForm({
-                                subject: exam.subject || '',
-                                topic: exam.topic || '',
-                                text: '',
-                                options: { A: '', B: '', C: '', D: '' },
-                                answer: 'A',
-                                marks: 1
-                              });
-                              setPoolFilters({
-                                subject: exam.subject || '',
-                                topic: ''
-                              });
-                            }}
-                            className="bg-success text-white hover:bg-success/90 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-sm border border-success/10"
-                            title="Manage MCQs under this Exam"
-                          >
-                            <Plus size={11} /> MCQ Pool Manager
-                          </button>
-                          <button
-                            onClick={() => handleTogglePublishExam(exam)}
-                            className={`flex items-center gap-1 px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer border ${
-                              exam.isPublished 
-                                ? 'bg-warning/8 border-warning/10 text-warning hover:bg-warning/15' 
-                                : 'bg-success/8 border-success/10 text-success hover:bg-success/15'
-                            }`}
-                          >
-                            {exam.isPublished ? 'Unpublish' : 'Publish'}
-                          </button>
-                          <button
-                            onClick={() => handleEditExam(exam)}
-                            className="bg-surface-hover hover:bg-accent/8 hover:text-accent hover:border-accent/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
-                            title="Edit Exam"
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            onClick={() => exam.id && handleDeleteExam(exam.id)}
-                            className="bg-surface-hover hover:bg-danger/8 hover:text-danger hover:border-danger/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
-                            title="Delete Exam"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
+                  {!examsLoaded ? (
+                    <div className="flex flex-col items-center justify-center py-32 text-center bg-surface-hover/10 rounded-2xl border border-dashed border-border/80">
+                      <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-3" />
+                      <p className="text-xs text-text-dim font-bold uppercase tracking-wider">Syncing Exams Database / ডাটা লোড হচ্ছে...</p>
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      {exams.map((exam) => (
+                        <div key={exam.id} className="bg-surface border border-border/70 hover:border-accent/40 rounded-xl p-5 hover:bg-surface-hover/20 transition-all space-y-4 group">
+                          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="bg-accent/8 text-accent font-extrabold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider font-mono">Exam Dispatch Node</span>
+                                <span className={`font-mono text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1.5 ${exam.isPublished ? 'bg-success/8 text-success border border-success/10' : 'bg-text-dim/8 text-text-dim border border-border/50'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${exam.isPublished ? 'bg-success' : 'bg-text-dim'}`} />
+                                  {exam.isPublished ? 'Live' : 'Draft'}
+                                </span>
+                              </div>
+                              <h4 className="text-base font-extrabold text-text-main leading-tight">
+                                {exam.subject}
+                              </h4>
+                            </div>
+                            <div className="flex items-center gap-4 shrink-0">
+                              <div className="text-left md:text-right bg-surface-hover border border-border/60 px-3 py-1.5 rounded-xl">
+                                <p className="text-[8px] font-bold uppercase text-text-dim/80 tracking-wider">ENTRANCE TOLL</p>
+                                <h5 className="text-sm font-black text-accent font-mono">৳{exam.price} BDT</h5>
+                              </div>
+                            </div>
+                          </div>
 
-                  {exams.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-2xl text-text-dim text-center bg-surface-hover/30">
-                      <Layers size={40} className="opacity-15 mb-4" />
-                      <p className="font-extrabold uppercase text-[12px] tracking-wider text-text-main">No MCQ Exams Built</p>
-                      <p className="text-xs max-w-xs mt-1 text-text-dim/80">Configure categories and questions on the registry to publish your first assessment panel.</p>
-                    </div>
+                          <div className="flex flex-wrap items-center justify-between gap-4 pt-3.5 border-t border-border/60">
+                            <div className="text-[11px] font-semibold text-text-dim flex items-center gap-1.5">
+                              <Tag size={12} className="text-accent opacity-80" />
+                              <span>Structure: <span className="font-bold text-text-main">{exam.questions?.length || 0} Questions</span>, marks total: <span className="font-bold text-text-main">{exam.questions?.reduce((acc, q) => acc + (q.marks || 1), 0) || 0}</span></span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <button
+                                onClick={() => {
+                                  setSelectedExamForMCQs(exam);
+                                  setPoolForm({
+                                    subject: exam.subject || '',
+                                    topic: exam.topic || '',
+                                    text: '',
+                                    options: { A: '', B: '', C: '', D: '' },
+                                    answer: 'A',
+                                    marks: 1
+                                  });
+                                  setPoolFilters({
+                                    subject: exam.subject || '',
+                                    topic: ''
+                                  });
+                                }}
+                                className="bg-success text-white hover:bg-success/90 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-sm border border-success/10"
+                                title="Manage MCQs under this Exam"
+                              >
+                                <Plus size={11} /> MCQ Pool Manager
+                              </button>
+                              <button
+                                onClick={() => handleTogglePublishExam(exam)}
+                                className={`flex items-center gap-1 px-3 py-2 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer border ${
+                                  exam.isPublished 
+                                    ? 'bg-warning/8 border-warning/10 text-warning hover:bg-warning/15' 
+                                    : 'bg-success/8 border-success/10 text-success hover:bg-success/15'
+                                }`}
+                              >
+                                {exam.isPublished ? 'Unpublish' : 'Publish'}
+                              </button>
+                              <button
+                                onClick={() => handleEditExam(exam)}
+                                className="bg-surface-hover hover:bg-accent/8 hover:text-accent hover:border-accent/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
+                                title="Edit Exam"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                onClick={() => exam.id && handleDeleteExam(exam.id)}
+                                className="bg-surface-hover hover:bg-danger/8 hover:text-danger hover:border-danger/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
+                                title="Delete Exam"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {exams.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-2xl text-text-dim text-center bg-surface-hover/30">
+                          <Layers size={40} className="opacity-15 mb-4" />
+                          <p className="font-extrabold uppercase text-[12px] tracking-wider text-text-main">No MCQ Exams Built</p>
+                          <p className="text-xs max-w-xs mt-1 text-text-dim/80">Configure categories and questions on the registry to publish your first assessment panel.</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -2470,63 +2470,72 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                 </div>
 
                 <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  {users.map((user) => (
-                    <div key={user.id} className="bg-surface border border-border/70 hover:border-accent/30 rounded-xl p-5 hover:bg-surface-hover/10 transition-all space-y-4 group">
-                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <h4 className="text-base font-extrabold text-text-main flex items-center gap-2">
-                            {user.name}
-                            <span className="bg-surface border border-border/80 font-mono font-bold text-[9px] px-2 py-0.5 rounded text-accent">ID: {user.userId}</span>
-                          </h4>
-                          <p className="text-xs font-bold text-text-dim uppercase tracking-wider">{user.institution}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-text-main">
-                          <div>
-                            <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider block">Phone No</span>
-                            <span className="font-semibold font-mono">{user.phone || 'N/A'}</span>
-                          </div>
-                          <div>
-                            <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider block">Email Address</span>
-                            <span className="font-semibold">{user.email || 'N/A'}</span>
-                          </div>
-                          <div className="col-span-2 pt-2 border-t border-border/60 mt-1">
-                            <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider">Unsealed Passcode: </span>
-                            <span className="font-mono font-extrabold text-accent bg-accent/8 px-1.5 py-0.5 rounded">{user.password}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-3.5 border-t border-border/60">
-                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-accent tracking-wider bg-surface-hover px-2.5 py-1 rounded border border-border/50">
-                          <CreditCard size={11} className="text-accent" />
-                          <span>Exam Purchases: {user.purchasedExamIds?.length || 0} active</span>
-                        </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button
-                            onClick={() => handleEditUser(user)}
-                            className="bg-surface-hover hover:bg-accent/8 hover:text-accent hover:border-accent/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
-                            title="Edit Student info"
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            onClick={() => user.id && handleDeleteUser(user.id)}
-                            className="bg-surface-hover hover:bg-danger/8 hover:text-danger hover:border-danger/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
-                            title="Delete Student"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </div>
+                  {!usersLoaded ? (
+                    <div className="flex flex-col items-center justify-center py-32 text-center bg-surface-hover/10 rounded-2xl border border-dashed border-border/80">
+                      <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-3" />
+                      <p className="text-xs text-text-dim font-bold uppercase tracking-wider">Syncing Student Directory / ডাটা লোড হচ্ছে...</p>
                     </div>
-                  ))}
+                  ) : (
+                    <>
+                      {users.map((user) => (
+                        <div key={user.id} className="bg-surface border border-border/70 hover:border-accent/30 rounded-xl p-5 hover:bg-surface-hover/10 transition-all space-y-4 group">
+                          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div className="space-y-1">
+                              <h4 className="text-base font-extrabold text-text-main flex items-center gap-2">
+                                {user.name}
+                                <span className="bg-surface border border-border/80 font-mono font-bold text-[9px] px-2 py-0.5 rounded text-accent">ID: {user.userId}</span>
+                              </h4>
+                              <p className="text-xs font-bold text-text-dim uppercase tracking-wider">{user.institution}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-text-main">
+                              <div>
+                                <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider block">Phone No</span>
+                                <span className="font-semibold font-mono">{user.phone || 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider block">Email Address</span>
+                                <span className="font-semibold">{user.email || 'N/A'}</span>
+                              </div>
+                              <div className="col-span-2 pt-2 border-t border-border/60 mt-1">
+                                <span className="text-text-dim/80 text-[9px] uppercase font-bold tracking-wider">Unsealed Passcode: </span>
+                                <span className="font-mono font-extrabold text-accent bg-accent/8 px-1.5 py-0.5 rounded">{user.password}</span>
+                              </div>
+                            </div>
+                          </div>
 
-                  {users.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-xl text-text-dim text-center bg-surface-hover/30">
-                      <Users size={40} className="opacity-15 mb-4" />
-                      <p className="font-extrabold uppercase text-[12px] tracking-wider text-text-main">No Students Registered</p>
-                      <p className="text-xs max-w-xs mt-1 text-text-dim/80">Active student accounts will show up here. Use the dispatch left form to log a profile.</p>
-                    </div>
+                          <div className="flex items-center justify-between pt-3.5 border-t border-border/60">
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-accent tracking-wider bg-surface-hover px-2.5 py-1 rounded border border-border/50">
+                              <CreditCard size={11} className="text-accent" />
+                              <span>Exam Purchases: {user.purchasedExamIds?.length || 0} active</span>
+                            </div>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              <button
+                                onClick={() => handleEditUser(user)}
+                                className="bg-surface-hover hover:bg-accent/8 hover:text-accent hover:border-accent/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
+                                title="Edit Student info"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                onClick={() => user.id && handleDeleteUser(user.id)}
+                                className="bg-surface-hover hover:bg-danger/8 hover:text-danger hover:border-danger/20 border border-border/70 text-text-dim p-2 rounded-xl transition-all cursor-pointer"
+                                title="Delete Student"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {users.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-xl text-text-dim text-center bg-surface-hover/30">
+                          <Users size={40} className="opacity-15 mb-4" />
+                          <p className="font-extrabold uppercase text-[12px] tracking-wider text-text-main">No Students Registered</p>
+                          <p className="text-xs max-w-xs mt-1 text-text-dim/80">Active student accounts will show up here. Use the dispatch left form to log a profile.</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -2831,42 +2840,53 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {filteredResults.map((res) => (
-                    <tr key={res.id} className="hover:bg-surface-hover/40 transition-colors text-xs text-text-main">
-                      <td className="py-4 px-5 font-mono text-text-dim text-[11px]">
-                        {res.timestamp?.seconds ? new Date(res.timestamp.seconds * 1000).toLocaleString() : 'N/A'}
-                      </td>
-                      <td className="py-4 px-5">
-                        <p className="font-extrabold text-text-main">{res.studentName}</p>
-                        <p className="text-[10px] font-mono text-text-dim uppercase font-bold">ID: {res.studentId}</p>
-                      </td>
-                      <td className="py-4 px-5">
-                        <p className="font-bold text-accent">{res.examTitle || 'Global MCQ Bank'}</p>
-                      </td>
-                      <td className="py-4 px-5 text-center font-mono font-bold text-text-main">
-                        {res.score} / {res.total}
-                      </td>
-                      <td className="py-4 px-5 text-center">
-                        <span className="bg-success/8 text-success px-3 py-1 rounded font-mono font-bold border border-success/10 text-xs">
-                          {res.percentage}%
-                        </span>
-                      </td>
-                      <td className="py-4 px-5 text-right">
-                        <button
-                          onClick={() => res.id && handleDeleteResult(res.id)}
-                          className="text-text-dim hover:text-danger p-2 bg-surface hover:bg-surface-hover border border-border/70 rounded-lg transition-all cursor-pointer"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredResults.length === 0 && (
+                  {!resultsLoaded ? (
                     <tr>
-                      <td colSpan={6} className="py-16 text-center text-text-dim font-bold uppercase text-[11px] tracking-wider bg-surface-hover/20">
-                        No examination records found in filtered view
+                      <td colSpan={6} className="py-24 text-center">
+                        <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-xs text-text-dim font-bold uppercase tracking-wider">Syncing Exam Results / ডাটা লোড হচ্ছে...</p>
                       </td>
                     </tr>
+                  ) : (
+                    <>
+                      {filteredResults.map((res) => (
+                        <tr key={res.id} className="hover:bg-surface-hover/40 transition-colors text-xs text-text-main">
+                          <td className="py-4 px-5 font-mono text-text-dim text-[11px]">
+                            {res.timestamp?.seconds ? new Date(res.timestamp.seconds * 1000).toLocaleString() : 'N/A'}
+                          </td>
+                          <td className="py-4 px-5">
+                            <p className="font-extrabold text-text-main">{res.studentName}</p>
+                            <p className="text-[10px] font-mono text-text-dim uppercase font-bold">ID: {res.studentId}</p>
+                          </td>
+                          <td className="py-4 px-5">
+                            <p className="font-bold text-accent">{res.examTitle || 'Global MCQ Bank'}</p>
+                          </td>
+                          <td className="py-4 px-5 text-center font-mono font-bold text-text-main">
+                            {res.score} / {res.total}
+                          </td>
+                          <td className="py-4 px-5 text-center">
+                            <span className="bg-success/8 text-success px-3 py-1 rounded font-mono font-bold border border-success/10 text-xs">
+                              {res.percentage}%
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <button
+                              onClick={() => res.id && handleDeleteResult(res.id)}
+                              className="text-text-dim hover:text-danger p-2 bg-surface hover:bg-surface-hover border border-border/70 rounded-lg transition-all cursor-pointer"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredResults.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-16 text-center text-text-dim font-bold uppercase text-[11px] tracking-wider bg-surface-hover/20">
+                            No examination records found in filtered view
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   )}
                 </tbody>
               </table>
@@ -2906,67 +2926,78 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {payments.map((slip) => (
-                    <tr key={slip.id} className="hover:bg-surface-hover/40 transition-colors text-xs text-text-main">
-                      <td className="py-4 px-5 font-mono text-text-dim text-[11px]">
-                        {slip.timestamp?.seconds ? new Date(slip.timestamp.seconds * 1000).toLocaleString() : 'N/A'}
-                      </td>
-                      <td className="py-4 px-5">
-                        <p className="font-extrabold text-text-main">{slip.studentName}</p>
-                        <p className="text-[10px] font-mono text-text-dim uppercase font-semibold">ID: {slip.userId}</p>
-                      </td>
-                      <td className="py-4 px-5">
-                        <p className="font-semibold text-text-main">{slip.examTitle}</p>
-                        <p className="font-bold text-accent font-mono text-[11px]">৳{slip.amount} BDT</p>
-                      </td>
-                      <td className="py-4 px-5 text-left font-mono font-bold text-success tracking-wider">
-                        {slip.trxId}
-                      </td>
-                      <td className="py-4 px-5 text-center">
-                        {slip.status === 'verified' ? (
-                          <span className="bg-success/8 text-success px-2 py-0.5 rounded text-[9px] font-bold border border-success/15 uppercase tracking-wider">
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="bg-amber-100/50 text-amber-700 px-2 py-0.5 rounded text-[9px] font-bold border border-amber-200/60 uppercase tracking-wider animate-pulse">
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-5 text-right">
-                        <div className="flex justify-end gap-1.5 items-center">
-                          {slip.status === 'pending' && (
-                            <button
-                              onClick={() => handleApprovePayment(slip)}
-                              className="bg-success hover:bg-success/95 text-white px-2.5 py-1.5 rounded-lg border border-success/15 transition-all inline-flex items-center gap-1 text-[9px] font-bold uppercase cursor-pointer"
-                            >
-                              <Check size={11} /> Approve
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setSelectedSlip(slip)}
-                            className="bg-surface-hover hover:bg-accent/8 hover:text-accent border border-border/70 p-1.5 rounded-lg transition-all inline-flex items-center gap-1 text-[10px] font-bold uppercase cursor-pointer"
-                            title="View Slip Details"
-                          >
-                            <Eye size={12} />
-                          </button>
-                          <button
-                            onClick={() => slip.id && handleDeletePayment(slip.id)}
-                            className="bg-surface-hover hover:bg-danger/8 hover:text-danger border border-border/70 p-1.5 rounded-lg transition-all cursor-pointer"
-                            title="Delete Ledger Entry"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {payments.length === 0 && (
+                  {!paymentsLoaded ? (
                     <tr>
-                      <td colSpan={6} className="py-16 text-center text-text-dim font-bold uppercase text-[11px] tracking-wider bg-surface-hover/20">
-                        No transactions registered in system records
+                      <td colSpan={6} className="py-24 text-center">
+                        <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-xs text-text-dim font-bold uppercase tracking-wider">Syncing Transactions ledger / ডাটা লোড হচ্ছে...</p>
                       </td>
                     </tr>
+                  ) : (
+                    <>
+                      {payments.map((slip) => (
+                        <tr key={slip.id} className="hover:bg-surface-hover/40 transition-colors text-xs text-text-main">
+                          <td className="py-4 px-5 font-mono text-text-dim text-[11px]">
+                            {slip.timestamp?.seconds ? new Date(slip.timestamp.seconds * 1000).toLocaleString() : 'N/A'}
+                          </td>
+                          <td className="py-4 px-5">
+                            <p className="font-extrabold text-text-main">{slip.studentName}</p>
+                            <p className="text-[10px] font-mono text-text-dim uppercase font-semibold">ID: {slip.userId}</p>
+                          </td>
+                          <td className="py-4 px-5">
+                            <p className="font-semibold text-text-main">{slip.examTitle}</p>
+                            <p className="font-bold text-accent font-mono text-[11px]">৳{slip.amount} BDT</p>
+                          </td>
+                          <td className="py-4 px-5 text-left font-mono font-bold text-success tracking-wider">
+                            {slip.trxId}
+                          </td>
+                          <td className="py-4 px-5 text-center">
+                            {slip.status === 'verified' ? (
+                              <span className="bg-success/8 text-success px-2 py-0.5 rounded text-[9px] font-bold border border-success/15 uppercase tracking-wider">
+                                Verified
+                              </span>
+                            ) : (
+                              <span className="bg-amber-100/50 text-amber-700 px-2 py-0.5 rounded text-[9px] font-bold border border-amber-200/60 uppercase tracking-wider animate-pulse">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex justify-end gap-1.5 items-center">
+                              {slip.status === 'pending' && (
+                                <button
+                                  onClick={() => handleApprovePayment(slip)}
+                                  className="bg-success hover:bg-success/95 text-white px-2.5 py-1.5 rounded-lg border border-success/15 transition-all inline-flex items-center gap-1 text-[9px] font-bold uppercase cursor-pointer"
+                                >
+                                  <Check size={11} /> Approve
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setSelectedSlip(slip)}
+                                className="bg-surface-hover hover:bg-accent/8 hover:text-accent border border-border/70 p-1.5 rounded-lg transition-all inline-flex items-center gap-1 text-[10px] font-bold uppercase cursor-pointer"
+                                title="View Slip Details"
+                              >
+                                <Eye size={12} />
+                              </button>
+                              <button
+                                onClick={() => slip.id && handleDeletePayment(slip.id)}
+                                className="bg-surface-hover hover:bg-danger/8 hover:text-danger border border-border/70 p-1.5 rounded-lg transition-all cursor-pointer"
+                                title="Delete Ledger Entry"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {payments.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-16 text-center text-text-dim font-bold uppercase text-[11px] tracking-wider bg-surface-hover/20">
+                            No transactions registered in system records
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   )}
                 </tbody>
               </table>
