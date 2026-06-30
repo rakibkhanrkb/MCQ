@@ -508,11 +508,32 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
     return () => unsub();
   }, [selectedExamForMCQs?.id]);
 
+  // 1. Read Admins immediately for auth/role validation (runs on mount)
   useEffect(() => {
-    // Fetch aggregate totals instantly
     fetchDatabaseCounts();
 
-    // Read Exams (No server-side orderBy to avoid missing documents with missing fields, and avoid index requirements)
+    const adminsQuery = query(collection(db, 'admins'));
+    const unsubscribeAdmins = onSnapshot(adminsQuery, (snapshot) => {
+      setAdminsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AdminAccount)));
+      setAdminsLoaded(true);
+    }, error => {
+      console.warn("Admins reading error:", error.message);
+      setAdminsLoaded(true);
+    });
+
+    return () => {
+      unsubscribeAdmins();
+    };
+  }, [syncCount]);
+
+  // 2. Read Exams: only when activeTab is exams, paid_users, results or when selectedExamForMCQs is set
+  useEffect(() => {
+    const isExamsTabActive = activeTab === 'exams' || activeTab === 'paid_users' || activeTab === 'results' || selectedExamForMCQs !== null;
+    if (!isExamsTabActive) {
+      return;
+    }
+
+    setExamsLoaded(false);
     const examsQuery = query(collection(db, 'exams'));
     const unsubscribeExams = onSnapshot(examsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Exam));
@@ -528,7 +549,19 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       setExamsLoaded(true);
     });
 
-    // Read Users (Students) limited to latest 500 profiles for high performance (No server-side orderBy to avoid silently omitting records missing 'createdAt' and avoid index requirements)
+    return () => {
+      unsubscribeExams();
+    };
+  }, [activeTab, selectedExamForMCQs, syncCount]);
+
+  // 3. Read Users (Students): only when activeTab is users or paid_users
+  useEffect(() => {
+    const isUsersTabActive = activeTab === 'users' || activeTab === 'paid_users';
+    if (!isUsersTabActive) {
+      return;
+    }
+
+    setUsersLoaded(false);
     const usersQuery = query(collection(db, 'users'), limit(500));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as UserAccount));
@@ -544,7 +577,19 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       setUsersLoaded(true);
     });
 
-    // Read Results with no limitation to fetch all sessions from database
+    return () => {
+      unsubscribeUsers();
+    };
+  }, [activeTab, syncCount]);
+
+  // 4. Read Results: only when activeTab is results
+  useEffect(() => {
+    const isResultsTabActive = activeTab === 'results';
+    if (!isResultsTabActive) {
+      return;
+    }
+
+    setResultsLoaded(false);
     const resultsQuery = query(collection(db, 'exam_results'));
     const unsubscribeResults = onSnapshot(resultsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -560,7 +605,19 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       setResultsLoaded(true);
     });
 
-    // Read Payments ledger limited to latest 150 payments for instant rendering
+    return () => {
+      unsubscribeResults();
+    };
+  }, [activeTab, syncCount]);
+
+  // 5. Read Payments: only when activeTab is payments
+  useEffect(() => {
+    const isPaymentsTabActive = activeTab === 'payments';
+    if (!isPaymentsTabActive) {
+      return;
+    }
+
+    setPaymentsLoaded(false);
     const paymentsQuery = query(collection(db, 'payments'), limit(150));
     const unsubscribePayments = onSnapshot(paymentsQuery, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as PaymentSlip));
@@ -576,24 +633,10 @@ export default function AdminPanel({ onLogout, activeAdminUsername }: AdminPanel
       setPaymentsLoaded(true);
     });
 
-    // Read Admins
-    const adminsQuery = query(collection(db, 'admins'));
-    const unsubscribeAdmins = onSnapshot(adminsQuery, (snapshot) => {
-      setAdminsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as AdminAccount)));
-      setAdminsLoaded(true);
-    }, error => {
-      console.warn("Admins reading error:", error.message);
-      setAdminsLoaded(true);
-    });
-
     return () => {
-      unsubscribeExams();
-      unsubscribeUsers();
-      unsubscribeResults();
       unsubscribePayments();
-      unsubscribeAdmins();
     };
-  }, [syncCount]);
+  }, [activeTab, syncCount]);
 
   // Questions addition helper for active exam creator
   const handleAddQuestionToExam = (e: React.FormEvent) => {

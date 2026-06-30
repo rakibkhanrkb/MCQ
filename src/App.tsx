@@ -25,7 +25,6 @@ export default function App() {
     return 'home';
   });
   const [exams, setExams] = useState<Exam[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [history, setHistory] = useState<ExamResult[]>([]);
   const [isAdminAuth, setIsAdminAuth] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -322,13 +321,6 @@ export default function App() {
       console.warn("Settings snapshot listener error:", err.message);
     });
 
-    // Global listener for Questions
-    const unsubQ = onSnapshot(collection(db, 'questions'), (snap) => {
-      setQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Question)));
-    }, (err) => {
-      console.warn("Questions snapshot listener error:", err.message);
-    });
-
     // Global listener for MCQ Exams
     const unsubExams = onSnapshot(collection(db, 'exams'), (snap) => {
       setExams(snap.docs.map(d => ({ id: d.id, ...d.data() } as Exam)));
@@ -355,7 +347,6 @@ export default function App() {
       clearTimeout(safetyTimeout);
       unsubAuth();
       unsubSettings();
-      unsubQ();
       unsubExams();
       unsubRoutines();
     };
